@@ -16,6 +16,10 @@ function connectWebSocket() {
     ws.onmessage = function(event) {
         const message = JSON.parse(event.data);
         console.log('Message from server:', message);
+
+        if (message.type === 'draw' && drawingCanvas) {
+            handleDrawEvent(message.data);
+        }
     };
 
     ws.onclose = function(event) {
@@ -26,5 +30,25 @@ function connectWebSocket() {
         console.error('WebSocket error:', error);
     };
 }   
+
+function handleDrawEvent(data) {
+    const { action, x, y, color, size } = data;
+
+    switch (action) {
+        case 'start':
+            drawingCanvas.ctx.strokeStyle = color;
+            drawingCanvas.ctx.lineWidth = size;
+            drawingCanvas.ctx.beginPath();
+            drawingCanvas.ctx.moveTo(x, y);
+            break;
+        case 'draw':
+            drawingCanvas.ctx.lineTo(x, y);
+            drawingCanvas.ctx.stroke();
+            break;
+        case 'stop':
+            drawingCanvas.ctx.closePath();
+            break;
+    }
+}
 
 window.addEventListener('load', connectWebSocket);

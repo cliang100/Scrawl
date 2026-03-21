@@ -9,12 +9,33 @@
 <body>
     <div class="game-container">
         <h1>Game Room</h1>
+        
+        <!-- Drawing Tools -->
+        <div class="drawing-tools">
+            <div class="tool-group">
+                <label>Color:</label>
+                <input type="color" id="colorPicker" value="#000000">
+            </div>
+            <div class="tool-group">
+                <label>Size:</label>
+                <input type="range" id="brushSize" min="1" max="20" value="2">
+                <span id="sizeDisplay">2</span>
+            </div>
+            <div class="tool-group">
+                <button id="clearCanvas">Clear</button>
+            </div>
+        </div>
+        
+        <!-- Canvas -->
         <canvas id="drawingCanvas"></canvas>
+        
+        <!-- Chat -->
         <div class="chat">
             <input type="text" id="guessInput" placeholder="Type your guess...">
             <button onclick="sendGuess()">Send</button>
         </div>
     </div>
+    
     <script src="/static/js/socket.js"></script>
     <script src="/static/js/canvas.js"></script>
     <script src="/static/js/game.js"></script>
