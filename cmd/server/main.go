@@ -3,7 +3,7 @@ package main
 import (
 	"github.com/gin-gonic/gin"
 	"net/http"
-
+	"scrawl/internal/hub"
 	"github.com/gorilla/websocket"
 )
 
@@ -26,22 +26,20 @@ func main() {
 		},
 	}
 
-	r.GET("/ws", func(c * gin.Context) {
+	var hubInstance = hub.NewHub()
+
+	r.GET("/ws/:roomId", func(c *gin.Context) {
+		roomID := c.Param("roomId")
 		conn, err := upgrader.Upgrade(c.Writer, c.Request, nil)
 		if err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": "WebSocket upgrade failed"})
 			return
 		}
-		defer conn.Close()
 
-		for {
-			messageType, message, err := conn.ReadMessage()
-			if err != nil {
-				break
-			}
-			conn.WriteMessage(messageType, message)
-		}
+		hub.HandleClient(conn, hubInstance, roomID)
 	})
+
+	go hub.Run(hubInstance)
 
 	r.Run(":8080")
 }
