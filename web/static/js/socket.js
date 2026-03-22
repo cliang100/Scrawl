@@ -2,20 +2,34 @@ let ws;
 
 function connectWebSocket() {
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-    const roomId = 'test-room';
-    ws = new WebSocket(`${protocol}//${window.location.host}/ws/${roomId}`);
+    ws = new WebSocket(`${protocol}//${window.location.host}/ws`);
 
     ws.onopen = function(event) {
-        console.log('WebSocket connected');
-        ws.send(JSON.stringify({
-            type: 'chat',
-            data: 'Hello from client!'
-        }));
+        console.log('WebSocket connected to lobby');
     };
 
     ws.onmessage = function(event) {
         const message = JSON.parse(event.data);
         console.log('Message from server:', message);
+
+        switch (message.type) {
+            case 'roomCreated':
+                console.log('Processing roomCreated:', message.data);
+                updateRoomUI(message.data.roomCode, message.data.players, message.data.hostId);
+                break;
+            case 'roomJoined':
+                console.log('Processing roomJoined:', message.data);
+                updateRoomUI(message.data.roomCode, message.data.players, message.data.hostId);
+                break;
+            case 'roomError':
+                console.log('Processing roomError:', message.data);
+                alert(message.data.error);
+                break;
+            case 'roomUpdated':
+                console.log('Processing roomUpdated:', message.data);
+                updateRoomUI(message.data.roomCode, message.data.players, message.data.hostId);
+                break;
+        }
 
         if (message.type === 'draw' && drawingCanvas) {
             handleDrawEvent(message.data);
@@ -30,6 +44,8 @@ function connectWebSocket() {
         console.error('WebSocket error:', error);
     };
 }   
+
+window.addEventListener('load', connectWebSocket);
 
 function handleDrawEvent(data) {
     const { action, x, y, color, size } = data;

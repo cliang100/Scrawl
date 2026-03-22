@@ -26,3 +26,67 @@
     max-width: 800px;
     margin: 0 auto;
 }
+
+.room-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    margin: 20px 0;
+}
+
+.join-room {
+    display: flex;
+    gap: 10px;
+}
+
+#roomCode {
+    text-transform: uppercase;
+    text-align: center;
+    font-size: 18px;
+    letter-spacing: 2px;
+}
+
+.hidden {
+    display: none;
+}
+
+#roomInfo {
+    margin-top: 30px;
+    padding: 20px;
+    background-color: #e8f4f8;
+    border-radius: 8px;
+}
+
+#playerList ul {
+    list-style: none;
+    padding: 0;
+}
+
+#playerList li {
+    padding: 5px 0;
+    font-weight: bold;
+}
+
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 20px;
+    background-color: #f0f0f0;
+}
+
+.container {
+    text-align: center;
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+button, input {
+    padding: 10px 20px;
+    margin: 10px;
+    font-size: 16px;
+}
+
+canvas {
+    border: 2px solid #333;
+    background-color: white;
+}

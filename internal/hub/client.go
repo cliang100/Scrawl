@@ -8,7 +8,7 @@ import (
 	"github.com/google/uuid"
 )
 
-func HandleClient(ws *websocket.Conn, hub *models.Hub, roomID string) {
+func HandleClient(ws *websocket.Conn, hub *models.Hub, roomID string, roomManager *models.RoomManager) {
 	client := &models.Client{
 		ID:		uuid.New().String(),
 		RoomID:	roomID,
@@ -19,10 +19,10 @@ func HandleClient(ws *websocket.Conn, hub *models.Hub, roomID string) {
 	hub.Register <- client
 
 	go writePump(client)
-	go readPump(client, hub)
+	go readPump(client, hub, roomManager)
 }
 
-func readPump(c *models.Client, hub *models.Hub) {
+func readPump(c *models.Client, hub *models.Hub, roomManager *models.RoomManager) {
 	defer func() {
 		c.Conn.Close()
 	}()
@@ -41,7 +41,69 @@ func readPump(c *models.Client, hub *models.Hub) {
 
 		msg.UserID = c.ID
 		msg.RoomID = c.RoomID
-		hub.Broadcast <- msg
+		
+		switch msg.Type {
+        case "createRoom":
+            room := roomManager.CreateRoom(c.ID)
+
+			SwitchRoom(hub, c, room.Code)
+
+			response := models.Message{
+				Type: "roomCreated",
+				Data: map[string]interface{}{
+					"roomCode": 	room.Code,
+					"players": 		room.Players,
+					"hostId":		room.HostID,
+				},
+				UserID: c.ID,
+				RoomID: room.Code,
+			}
+			c.Send <- response
+
+        case "joinRoom":
+            roomCode := msg.Data.(map[string]interface{})["roomCode"].(string)
+			room, err := roomManager.JoinRoom(roomCode, c.ID)
+			if err != nil {
+				response := models.Message{
+					Type: "roomError",
+					Data: map[string]interface{}{"error": err.Error()},
+					UserID: c.ID,
+				}
+				c.Send <- response
+			} else {
+				SwitchRoom(hub, c, room.Code)
+				
+				response := models.Message{
+					Type: "roomUpdated",
+					Data: map[string]interface{}{
+						"roomCode": room.Code,
+						"players":	room.Players,
+						"hostId":	room.HostID,
+					},
+					RoomID: room.Code,
+				}
+
+				hub.Broadcast <- response
+
+				joinResponse := models.Message{
+					Type: "roomJoined",
+					Data: map[string]interface{}{
+						"roomCode": room.Code,
+						"players":	room.Players,
+						"hostId":	room.HostID,
+					},
+					UserID: c.ID,
+					RoomID: room.Code,
+				}
+				c.Send <- joinResponse
+			} 
+        case "startGame":
+            // Handle game start
+        case "draw":
+            hub.Broadcast <- msg
+        default:
+            hub.Broadcast <- msg
+        }
 	}
 }
 
