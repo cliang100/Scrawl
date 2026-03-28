@@ -4,69 +4,88 @@ import (
 	"crypto/rand"
 	"fmt"
 	"math/big"
-	"github.com/gorilla/websocket"
 	"sync"
+
+	"github.com/gorilla/websocket"
 )
 
 type Message struct {
-	Type	string		`json:"type"`
-	Data	interface{}	`json:"data"`
-	RoomID	string		`json:"roomId,omitempty"`
-	UserID 	string		`json:"userId,omitempty"`	
+	Type   string      `json:"type"`
+	Data   interface{} `json:"data"`
+	RoomID string      `json:"roomId,omitempty"`
+	UserID string      `json:"userId,omitempty"`
 }
 
 type Client struct {
-	ID		string
-	RoomID	string
-	Conn	*websocket.Conn
-	Send	chan Message
+	ID     string
+	RoomID string
+	Conn   *websocket.Conn
+	Send   chan Message
+	Name   string
 }
 
 type Hub struct {
-	Clients		map[*Client]bool
-	Rooms		map[string]map[*Client]bool
-	Register	chan *Client
-	Unregister 	chan *Client
-	Broadcast 	chan Message
+	Clients    map[*Client]bool
+	Rooms      map[string]map[*Client]bool
+	Register   chan *Client
+	Unregister chan *Client
+	Broadcast  chan Message
 }
 
 type Room struct {
-	Code	string
-	HostID	string
-	Players	[]*Player
-	State	string
+	Code            string
+	Players         map[string]*Player
+	HostID          string
+	State           string
+	CurrentDrawerID string
+	CurrentWord     string
+	TurnOrder       []string
+	Round           int
 }
 
 type Player struct {
-	ID		string
-	Name	string
-	Score	int
-	IsHost	bool
+	ID     string `json:"id"`
+	Name   string `json:"name"`
+	Avatar string `json:"avatar"`
+	IsHost bool   `json:"isHost"`
 }
 
 type RoomManager struct {
-	Rooms 	map[string]*Room
-	mu		sync.RWMutex
+	Rooms map[string]*Room
+	mu    sync.RWMutex
 }
 
-func (rm *RoomManager) CreateRoom(hostID string) *Room {
+func (rm *RoomManager) CreateRoom(hostID, name, avatar string) *Room {
 	rm.mu.Lock()
 	defer rm.mu.Unlock()
 
 	roomCode := generateRoomCode()
 
-	room := &Room{
-		Code:		roomCode,
-		HostID:		hostID,
-		Players:	[]*Player{{ID: hostID, Name: "Player 1", IsHost: true}},
-		State:		"lobby",
+	hostPlayer := &Player{
+		ID:     hostID,
+		Name:   name,
+		Avatar: avatar,
+		IsHost: true,
 	}
 
+	room := &Room{
+		Code:            roomCode,
+		Players:         make(map[string]*Player),
+		HostID:          hostID,
+		State:           "waiting",
+		CurrentDrawerID: hostID,
+		TurnOrder:       []string{hostID},
+		Round:           1,
+	}
+
+	room.Players[hostID] = hostPlayer
 	rm.Rooms[roomCode] = room
+
+	fmt.Printf("Creating host player: name=%s, avatar=%s\n", name, avatar)
 	return room
 }
 
-func (rm *RoomManager) JoinRoom(roomCode, playerID string) (*Room, error) {
+func (rm *RoomManager) JoinRoom(roomCode, playerID, name, avatar string) (*Room, error) {
 	rm.mu.Lock()
 	defer rm.mu.Unlock()
 
@@ -75,20 +94,19 @@ func (rm *RoomManager) JoinRoom(roomCode, playerID string) (*Room, error) {
 		return nil, fmt.Errorf("room not found")
 	}
 
-	for _, player := range room.Players {
-		if player.ID == playerID {
-			return room, nil
+	if _, exists := room.Players[playerID]; !exists {
+		newPlayer := &Player{
+			ID:     playerID,
+			Name:   name,
+			Avatar: avatar,
+			IsHost: false,
 		}
+
+		room.Players[playerID] = newPlayer
+		room.TurnOrder = append(room.TurnOrder, playerID)
+		fmt.Printf("Creating joining player: name=%s, avatar=%s\n", name, avatar)
 	}
 
-	playerNum := len(room.Players) + 1
-	newPlayer := &Player{
-		ID:		playerID,
-		Name:	fmt.Sprintf("Player %d", playerNum),
-		IsHost: false,
-	}
-
-	room.Players = append(room.Players, newPlayer)
 	return room, nil
 }
 

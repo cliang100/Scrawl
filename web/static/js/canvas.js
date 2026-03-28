@@ -83,7 +83,7 @@ class DrawingCanvas {
     }
     
     sendDrawEvent(type, x, y) {
-        if (window.ws && ws.readyState === WebSocket.OPEN) {
+        if (ws && ws.readyState === WebSocket.OPEN) {
             ws.send(JSON.stringify({
                 type: 'draw',
                 data: {

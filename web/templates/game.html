@@ -10,6 +10,18 @@
     <div class="game-container">
         <h1>Game Room</h1>
         
+        <!-- Game Info -->
+        <div class="game-info">
+            <div class="players-section">
+                <h3>Players</h3>
+                <ul id="gamePlayerList"></ul>
+            </div>
+            <div class="turn-info">
+                <h3 id="turnStatus">Waiting for game to start...</h3>
+                <div id="wordDisplay"></div>
+            </div>
+        </div>
+        
         <!-- Drawing Tools -->
         <div class="drawing-tools">
             <div class="tool-group">
@@ -39,5 +51,15 @@
     <script src="/static/js/socket.js"></script>
     <script src="/static/js/canvas.js"></script>
     <script src="/static/js/game.js"></script>
+    <script>
+        connectWebSocket();
+        // Initialize game UI after a short delay to ensure WebSocket is ready
+        setTimeout(() => {
+            if (window.currentPlayers) {
+                window.updateGameUI();
+            }
+        }, 100);
+        
+            </script>
 </body>
 </html>

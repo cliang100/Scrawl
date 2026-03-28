@@ -11,6 +11,27 @@
         <h1>Scrawl</h1>
         <p>Multiplayer drawing game</p>
         
+        <!-- Player Setup -->
+        <div class="player-setup">
+            <div class="setup-group">
+                <label for="playerName">Your Name:</label>
+                <input type="text" id="playerName" placeholder="Enter your name" maxlength="12">
+            </div>
+            <div class="setup-group">
+                <label>Choose Avatar:</label>
+                <div class="avatar-selection">
+                    <div class="avatar-option" data-avatar="🎨">🎨</div>
+                    <div class="avatar-option" data-avatar="🦊">🦊</div>
+                    <div class="avatar-option" data-avatar="🐱">🐱</div>
+                    <div class="avatar-option" data-avatar="🐶">🐶</div>
+                    <div class="avatar-option" data-avatar="🦄">🦄</div>
+                    <div class="avatar-option" data-avatar="🐼">🐼</div>
+                    <div class="avatar-option" data-avatar="🦋">🦋</div>
+                    <div class="avatar-option" data-avatar="🐸">🐸</div>
+                </div>
+            </div>
+        </div>
+        
         <div class="room-actions">
             <button onclick="createRoom()">Create Room</button>
             <div class="join-room">
@@ -21,11 +42,11 @@
         
         <div id="roomInfo" class="hidden">
             <h3>Room Code: <span id="currentRoomCode"></span></h3>
-            <div id="playerList">
+            <div id="playersSection">
                 <h4>Players:</h4>
-                <ul id="players"></ul>
+                <ul id="playerList"></ul>
             </div>
-            <button onclick="startGame()" id="startButton" class="hidden">Start Game</button>
+            <button onclick="startGame()" id="startGameBtn">Start Game</button>
         </div>
     </div>
     

@@ -1,49 +1,355 @@
 .drawing-tools {
     display: flex;
-    gap: 20px;
-    margin-bottom: 10px;
-    padding: 10px;
-    background-color: #ddd;
-    border-radius: 5px;
+    gap: 25px;
+    margin-bottom: 20px;
+    padding: 20px;
+    background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+    border-radius: 15px;
+    justify-content: center;
+    align-items: center;
+    flex-wrap: wrap;
 }
 
 .tool-group {
     display: flex;
     align-items: center;
-    gap: 5px;
+    gap: 10px;
+    background: white;
+    padding: 10px 15px;
+    border-radius: 10px;
+    border: 1px solid #e1e5e9;
 }
 
 .tool-group label {
-    font-weight: bold;
+    font-weight: 600;
+    color: #333;
+    font-size: 14px;
 }
 
 #brushSize {
-    width: 100px;
+    width: 120px;
+}
+
+#colorPicker {
+    width: 50px;
+    height: 35px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+#clearCanvas {
+    background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+#clearCanvas:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(255, 107, 107, 0.4);
+}
+
+#sizeDisplay {
+    background: #667eea;
+    color: white;
+    padding: 4px 8px;
+    border-radius: 5px;
+    font-weight: 600;
+    font-size: 12px;
+}
+
+canvas {
+    border: 3px solid #e1e5e9;
+    background-color: white;
+    border-radius: 15px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    margin: 20px 0;
+    cursor: crosshair;
+}
+
+canvas:disabled {
+    cursor: not-allowed;
+    opacity: 0.7;
+}
+
+.chat {
+    margin-top: 20px;
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    align-items: center;
+}
+
+#guessInput {
+    width: 300px;
+    padding: 12px 16px;
+    border: 2px solid #e1e5e9;
+    border-radius: 10px;
+    font-size: 16px;
+    outline: none;
+    transition: border-color 0.3s ease;
+}
+
+#guessInput:focus {
+    border-color: #667eea;
+}
+
+.chat button {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border: none;
+    padding: 12px 20px;
+    border-radius: 10px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+.chat button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(102, 126, 234, 0.4);
 }
 
 .game-container {
     text-align: center;
-    max-width: 800px;
+    max-width: 1000px;
     margin: 0 auto;
+    background: white;
+    padding: 40px;
+    border-radius: 20px;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+}
+
+.game-info {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 30px;
+    gap: 20px;
+}
+
+.players-section, .turn-info {
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    padding: 20px;
+    border-radius: 15px;
+    border: 1px solid rgba(255, 255, 255, 0.8);
+    flex: 1;
+}
+
+#gamePlayerList {
+    list-style: none;
+    padding: 0;
+    margin: 10px 0 0 0;
+}
+
+#gamePlayerList li {
+    padding: 8px 12px;
+    margin: 5px 0;
+    background: white;
+    border-radius: 8px;
+    font-weight: 500;
+    color: #333;
+    border: 1px solid #e1e5e9;
+    transition: all 0.2s ease;
+}
+
+#gamePlayerList li.current-drawer {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border-color: #667eea;
+}
+
+#turnStatus {
+    margin: 10px 0;
+    color: #333;
+    font-size: 1.1em;
+}
+
+#wordDisplay {
+    margin: 15px 0;
+    font-size: 1.2em;
+    font-weight: 600;
+    color: #667eea;
+    min-height: 30px;
+}
+
+.word-selection h4 {
+    margin: 0 0 15px 0;
+    color: #333;
+}
+
+.word-options {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.word-btn {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border: none;
+    padding: 12px 20px;
+    border-radius: 10px;
+    font-size: 1em;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+}
+
+.word-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+}
+
+.word-btn:active {
+    transform: translateY(0);
+}
+
+.guessing-info {
+    text-align: center;
+}
+
+.guessing-info h4 {
+    color: #667eea;
+    margin: 0 0 10px 0;
+}
+
+.guessing-info p {
+    color: #666;
+    margin: 0 0 15px 0;
+}
+
+.word-hint {
+    font-size: 1.5em;
+    font-weight: 600;
+    color: #333;
+    letter-spacing: 0.2em;
+    background: #f8f9fa;
+    padding: 15px;
+    border-radius: 10px;
+    border: 2px dashed #667eea;
+}
+
+/* Word selection overlay */
+.word-selection-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.8);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.word-selection-modal {
+    background: white;
+    padding: 30px;
+    border-radius: 15px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    text-align: center;
+    max-width: 400px;
+}
+
+.word-selection-modal h3 {
+    margin: 0 0 20px 0;
+    color: #333;
+    font-size: 1.5em;
+}
+
+.word-selection-modal .word-options {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 15px;
+    margin: 20px 0;
+}
+
+.player-setup {
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    padding: 25px;
+    border-radius: 15px;
+    margin-bottom: 25px;
+    border: 1px solid rgba(255, 255, 255, 0.8);
+}
+
+.setup-group {
+    margin-bottom: 20px;
+}
+
+.setup-group label {
+    display: block;
+    margin-bottom: 10px;
+    font-weight: 600;
+    color: #333;
+    font-size: 14px;
+}
+
+#playerName {
+    width: 100%;
+    max-width: 250px;
+    margin: 0 auto;
+    display: block;
+}
+
+.avatar-selection {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    flex-wrap: wrap;
+    margin-top: 10px;
+}
+
+.avatar-option {
+    font-size: 2em;
+    cursor: pointer;
+    padding: 10px;
+    border-radius: 10px;
+    border: 2px solid transparent;
+    transition: all 0.3s ease;
+    background: white;
+}
+
+.avatar-option:hover {
+    transform: scale(1.1);
+    border-color: #667eea;
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+}
+
+.avatar-option.selected {
+    border-color: #667eea;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    transform: scale(1.1);
 }
 
 .room-actions {
     display: flex;
     flex-direction: column;
-    gap: 20px;
-    margin: 20px 0;
+    gap: 25px;
+    margin: 30px 0;
 }
 
 .join-room {
     display: flex;
-    gap: 10px;
+    gap: 12px;
+    justify-content: center;
+    align-items: center;
 }
 
 #roomCode {
     text-transform: uppercase;
     text-align: center;
     font-size: 18px;
-    letter-spacing: 2px;
+    letter-spacing: 3px;
+    font-weight: 600;
+    width: 180px;
 }
 
 .hidden {
@@ -52,38 +358,146 @@
 
 #roomInfo {
     margin-top: 30px;
-    padding: 20px;
-    background-color: #e8f4f8;
-    border-radius: 8px;
+    padding: 25px;
+    background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+    border-radius: 15px;
+    border: 1px solid rgba(255, 255, 255, 0.8);
 }
 
-#playerList ul {
+#currentRoomCode {
+    display: inline-block;
+    padding: 8px 16px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border-radius: 8px;
+    font-weight: 700;
+    font-size: 1.2em;
+    letter-spacing: 3px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    margin: 10px 0;
+}
+
+#currentRoomCode:hover {
+    transform: scale(1.05);
+    box-shadow: 0 6px 16px rgba(102, 126, 234, 0.3);
+}
+
+#playersSection {
+    margin: 20px 0;
+}
+
+#playersSection h4 {
+    color: #333;
+    margin-bottom: 15px;
+    font-size: 1.2em;
+    font-weight: 600;
+}
+
+#playerList {
     list-style: none;
     padding: 0;
+    margin: 0;
 }
 
 #playerList li {
-    padding: 5px 0;
-    font-weight: bold;
+    padding: 10px 15px;
+    margin: 5px 0;
+    background: white;
+    border-radius: 8px;
+    font-weight: 500;
+    color: #333;
+    border: 1px solid #e1e5e9;
+    transition: all 0.2s ease;
+}
+
+#playerList li:hover {
+    transform: translateX(5px);
+    border-color: #667eea;
+}
+
+#startGameBtn {
+    background: linear-gradient(135deg, #56ab2f 0%, #a8e063 100%);
+    font-size: 18px;
+    padding: 14px 28px;
+    margin-top: 20px;
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+#startGameBtn:hover {
+    box-shadow: 0 8px 20px rgba(86, 171, 47, 0.4);
 }
 
 body {
-    font-family: Arial, sans-serif;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     margin: 0;
     padding: 20px;
-    background-color: #f0f0f0;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .container {
     text-align: center;
-    max-width: 600px;
+    max-width: 500px;
     margin: 0 auto;
+    background: white;
+    padding: 40px;
+    border-radius: 20px;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
 }
 
-button, input {
-    padding: 10px 20px;
-    margin: 10px;
+h1 {
+    color: #333;
+    margin-bottom: 10px;
+    font-size: 2.5em;
+    font-weight: 700;
+}
+
+p {
+    color: #666;
+    margin-bottom: 30px;
+    font-size: 1.1em;
+}
+
+button {
+    padding: 12px 24px;
+    margin: 8px;
     font-size: 16px;
+    font-weight: 600;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+}
+
+button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
+}
+
+button:active {
+    transform: translateY(0);
+}
+
+input {
+    padding: 12px 16px;
+    margin: 8px;
+    font-size: 16px;
+    border: 2px solid #e1e5e9;
+    border-radius: 10px;
+    outline: none;
+    transition: border-color 0.3s ease;
+}
+
+input:focus {
+    border-color: #667eea;
 }
 
 canvas {
