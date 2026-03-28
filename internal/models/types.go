@@ -30,6 +30,7 @@ type Hub struct {
 	Register   chan *Client
 	Unregister chan *Client
 	Broadcast  chan Message
+	Mu		   sync.RWMutex
 }
 
 type Room struct {

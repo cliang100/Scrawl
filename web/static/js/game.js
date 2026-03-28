@@ -205,7 +205,6 @@ function startGame() {
     }));
     
     console.log('Sent startGame message');
-    navigateToGame();
 }
 
 function updateGameUI() {

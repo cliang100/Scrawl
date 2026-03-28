@@ -7,11 +7,11 @@ import (
 
 func NewHub() *models.Hub {
 	return &models.Hub{
-		Clients:	make(map[*models.Client]bool),
-		Rooms:		make(map[string]map[*models.Client]bool),
-		Register:	make(chan *models.Client),
-		Unregister: make(chan *models.Client),
-		Broadcast: 	make(chan models.Message),
+		Clients:    make(map[*models.Client]bool),
+		Rooms:      make(map[string]map[*models.Client]bool),
+		Register:   make(chan *models.Client, 256),
+		Unregister: make(chan *models.Client, 256),
+		Broadcast:  make(chan models.Message, 256),
 	}
 }
 
@@ -34,15 +34,18 @@ func Run(h *models.Hub) {
 				log.Printf("Client %s left room %s", client.ID, client.RoomID)
 			}
 		case message := <-h.Broadcast:
-			if roomClients, ok := h.Rooms[message.RoomID]; ok {
-				for client := range roomClients {
-					select {
-					case client.Send <- message:
-					default:
-						close(client.Send)
-						delete(h.Clients, client)
-						delete(h.Rooms[client.RoomID], client)
-					}
+			h.Mu.RLock()
+			roomClients := h.Rooms[message.RoomID]
+			h.Mu.RUnlock()
+			for client := range roomClients {
+				select {
+				case client.Send <- message:
+				default:
+					close(client.Send)
+					h.Mu.Lock()
+					delete(h.Clients, client)
+					delete(h.Rooms[client.RoomID], client)
+					h.Mu.Unlock()
 				}
 			}
 		}
@@ -50,6 +53,9 @@ func Run(h *models.Hub) {
 }
 
 func SwitchRoom(h *models.Hub, client *models.Client, newRoomID string) {
+	h.Mu.Lock()
+	defer h.Mu.Unlock()
+
 	if oldRoomClients, exists := h.Rooms[client.RoomID]; exists {
 		delete(oldRoomClients, client)
 		if len(oldRoomClients) == 0 {
@@ -62,6 +68,5 @@ func SwitchRoom(h *models.Hub, client *models.Client, newRoomID string) {
 		h.Rooms[newRoomID] = make(map[*models.Client]bool)
 	}
 	h.Rooms[newRoomID][client] = true
-
-	log.Printf("Client %s switched from room %s to %s", client.ID, client.RoomID, newRoomID)
+	log.Printf("Client %s switched to %s", client.ID, newRoomID)
 }

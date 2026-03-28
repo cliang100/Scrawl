@@ -47,6 +47,7 @@ function connectWebSocket() {
                 break;
             case 'gameStarted':
                 const name = document.getElementById('playerName')?.value.trim() || '';
+                console.log('gameStarted recieved, navigating with name', name);
                 window.location.href = `/game?room=${message.data.roomCode}&name=${encodeURIComponent(name)}`;
                 break;
             case 'gameStateUpdate':

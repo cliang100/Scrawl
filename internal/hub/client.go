@@ -27,6 +27,7 @@ func HandleClient(ws *websocket.Conn, hub *models.Hub, roomID string, roomManage
 
 func readPump(c *models.Client, hub *models.Hub, roomManager *models.RoomManager) {
 	defer func() {
+		log.Printf("readPump exiting for client %s", c.ID)
 		c.Conn.Close()
 	}()
 
@@ -107,13 +108,22 @@ func readPump(c *models.Client, hub *models.Hub, roomManager *models.RoomManager
 		case "startGame":
 			roomCode := msg.Data.(map[string]interface{})["roomCode"].(string)
 			room := roomManager.Rooms[roomCode]
+			log.Printf("startGame received - roomCode: %s, clientID: %s, playerCount: %d", roomCode, c.ID, len(room.Players))
+
+			if len(room.Players) < 2 {
+				c.Send <- models.Message{
+					Type: "gameError",
+					Data: map[string]interface{}{"error": "Need at least 2 players to start"},
+				}
+				continue
+			}
 
 			if room.HostID != c.ID {
 				c.Send <- models.Message{
 					Type: "gameError",
 					Data: map[string]interface{}{"error": "Only the host can start the game"},
 				}
-				return
+				continue
 			}
 			
 			room.State = "playing"
@@ -132,25 +142,20 @@ func readPump(c *models.Client, hub *models.Hub, roomManager *models.RoomManager
 				RoomID: room.Code,
 			}
 
-			if roomClients, ok := hub.Rooms[room.Code]; ok {
-				for client := range roomClients {
-					if client.ID == room.CurrentDrawerID {
-						shuffled := make([]string, len(words.DrawingWords))
-						copy(shuffled, words.DrawingWords)
-						for i := len(shuffled) - 1; i > 0; i -- {
-							j := rand.Intn(i + 1)
-							shuffled[i], shuffled[j] = shuffled[j], shuffled[i]
-						}
-						client.Send <- models.Message{
-							Type: "getWords",
-							Data: map[string]interface{}{
-								"words": shuffled[:3],
-							},
-							UserID: client.ID,
-							RoomID: room.Code,
-						}
-						break
-					}
+			if room.CurrentDrawerID == c.ID {
+				shuffled := make([]string,len(words.DrawingWords))
+				copy(shuffled, words.DrawingWords)
+				for i := len(shuffled) - 1; i > 1; i -- {
+					j := rand.Intn(i + 1)
+					shuffled[i], shuffled[j] = shuffled[j], shuffled[i]
+				}
+				c.Send <- models.Message{
+					Type: "getWords",
+					Data: map[string]interface{}{
+						"words": shuffled[:3],
+					},
+					UserID: c.ID,
+					RoomID: room.Code,
 				}
 			}
 		case "getWords":
@@ -281,6 +286,7 @@ func writePump(c *models.Client) {
 
 		err = c.Conn.WriteMessage(websocket.TextMessage, data)
 		if err != nil {
+			log.Printf("writePump error for client %s: %v", c.ID, err)
 			break
 		}
 	}
