@@ -90,13 +90,29 @@ function connectWebSocket() {
                 const guess = message.data.guess;
                 const isCorrect = guess.toLowerCase() === currentWord.toLowerCase();
 
-                if (isCorrect) {
-                    alert (`🎉 ${message.data.userName} guessed correctly! The word was "${currentWord}"`);
-                }
                 break;
             case 'gameError':
                 console.log('Processing gameError:', message.data);
                 alert(message.data.error);
+                break;
+            case 'turnEnd':
+                console.log('Processing turnEnd:', message.data);
+                currentDrawerId = message.data.nextDrawerId;
+                currentWord = null;
+
+                // Clear canvas
+                if (drawingCanvas && drawingCanvas.ctx) {
+                    drawingCanvas.ctx.clearRect(0, 0, drawingCanvas.canvas.width, drawingCanvas.canvas.height);
+                }
+
+                // Show notification in chat
+                const notification = document.createElement('div');
+                notification.className = 'correct-guess-notification';
+                notification.textContent = `✅ ${message.data.guesserName} guessed correctly!`;
+                const chatDiv = document.querySelector('.chat');
+                if (chatDiv) chatDiv.prepend(notification);
+
+                updateGameUI();
                 break;
         }
 

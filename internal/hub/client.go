@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"log"
 	"math/rand"
+	"strings"
 	"scrawl/internal/models"
 	"scrawl/internal/words"
 
@@ -263,6 +264,75 @@ func readPump(c *models.Client, hub *models.Hub, roomManager *models.RoomManager
 					RoomID: roomCode,
 				}
 			}
+		case "guess":
+		guess := msg.Data.(map[string]interface{})["guess"].(string)
+		userName := msg.Data.(map[string]interface{})["userName"].(string)
+		room := roomManager.Rooms[c.RoomID]
+
+		if room == nil {
+			continue
+		}
+
+		hub.Broadcast <- models.Message{
+			Type: "guess",
+			Data: map[string]interface{}{
+				"guess":	guess,
+				"userName": userName,
+				"userId":	c.ID,
+			},
+			RoomID: c.RoomID,
+		}
+
+		if strings.EqualFold(guess, room.CurrentWord) {
+			currentIndex := 0
+			for i, id := range room.TurnOrder {
+				if id == room.CurrentDrawerID {
+					currentIndex = i
+					break
+				}
+			}
+			nextIndex := (currentIndex + 1) % len(room.TurnOrder)
+			room.CurrentDrawerID = room.TurnOrder[nextIndex]
+			room.CurrentWord = ""
+
+			hub.Broadcast <- models.Message{
+				Type: "turnEnd",
+				Data: map[string]interface{}{
+					"correctGuesser": c.ID,
+					"guesserName":	  userName,
+					"nextDrawerId":	  room.CurrentDrawerID,
+				},
+				RoomID: c.RoomID,
+			}
+			log.Printf("Looking for new drawer %s in room %s", room.CurrentDrawerID, c.RoomID)
+			hub.Mu.RLock()
+			for client := range hub.Rooms[c.RoomID] {
+				log.Printf("Found client in room: %s", client.ID)
+			}
+			hub.Mu.RUnlock()
+
+			if roomClients, ok := hub.Rooms[c.RoomID]; ok {
+				for client := range roomClients {
+					if client.ID == room.CurrentDrawerID {
+						shuffled := make([]string, len(words.DrawingWords))
+						copy(shuffled, words.DrawingWords)
+						for i := len(shuffled) - 1; i > 1; i -- {
+							j := rand.Intn(i + 1)
+							shuffled[i], shuffled[j] = shuffled[j], shuffled[i]
+						}
+						client.Send <- models.Message{
+							Type: "getWords",
+							Data: map[string]interface{}{
+								"words": shuffled[:3],
+							},
+							UserID: client.ID,
+							RoomID: c.RoomID,
+						}
+						break
+					}
+				}
+			}
+		}
 		case "draw":
 			msg.RoomID = c.RoomID
 			hub.Broadcast <- msg

@@ -287,7 +287,8 @@ function getPlayerName(playerId) {
 
 function showWordSelection() {
     console.log('showWordSelection called, isDrawer:', isDrawer);
-    if (!isDrawer) return; // Only drawer can select words
+    if (!isDrawer) return; 
+    if (window.wordSelectionOverlay) return;
     
     // Create overlay
     const overlay = document.createElement('div');
@@ -371,11 +372,6 @@ function handleGameStateUpdate(data) {
     turnOrder = data.turnOrder;
     currentPlayers = data.players;
     currentWord = data.currentWord;
-    
-    // If only one player, make them the drawer
-    if (turnOrder.length === 1) {
-        currentDrawerId = currentUserId;
-    }
     
     console.log('After processing - currentDrawerId:', currentDrawerId, 'currentUserId:', currentUserId);
     
