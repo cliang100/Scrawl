@@ -1,23 +1,30 @@
 # Scrawl
 
-Real-time multiplayer drawing and guessing game built in Go.
+A multiplayer drawing and guessing game inspired by Skribbl.io. Players take turns drawing while others guess in real-time.
 
-## Architecture
-- WebSocket Hub Pattern for real-time communication
-- Go + Gin for backend
-- Vanilla JavaScript + Canvas API for frontend
+## Tech Stack
+- **Backend**: Go with Gin framework and WebSocket hub pattern
+- **Frontend**: Vanilla JavaScript with HTML5 Canvas
+- **Protocol**: WebSocket for real-time communication
 
-## Getting Started
-1. Install dependencies: `go get github.com/gin-gonic/gin`
-2. Run server: `go run cmd/server/main.go`
-3. Open browser to `http://localhost:8080`
+## Quick Start
+```bash
+# Install dependencies
+go get github.com/gin-gonic/gin
 
-## Project Structure
-[Explain the folder structure we created]
+# Run the server
+go run cmd/server/main.go
+```
 
-## Development Phases
-1. WebSocket foundation
-2. Drawing canvas + sync  
-3. Game loop
-4. Differentiating features
-5. Polish + deployment
+## How It Works
+The game uses a WebSocket hub pattern to manage real-time communication:
+- Game rooms with multiple players
+- Turn-based drawing system
+- Real-time canvas synchronization
+- Chat and guessing mechanics
+
+## Game Flow
+1. Players join a room
+2. One player draws, others guess
+3. Correct guesses earn points
+4. Turns rotate when time expires or word is guessed
