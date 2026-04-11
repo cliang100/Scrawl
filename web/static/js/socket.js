@@ -87,9 +87,6 @@ function connectWebSocket() {
                 break;
             case 'guess':
                 console.log('Processing guess:', message.data);
-                const guess = message.data.guess;
-                const isCorrect = guess.toLowerCase() === currentWord.toLowerCase();
-
                 break;
             case 'gameError':
                 console.log('Processing gameError:', message.data);
