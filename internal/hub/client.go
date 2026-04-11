@@ -29,6 +29,7 @@ func HandleClient(ws *websocket.Conn, hub *models.Hub, roomID string, roomManage
 func readPump(c *models.Client, hub *models.Hub, roomManager *models.RoomManager) {
 	defer func() {
 		log.Printf("readPump exiting for client %s", c.ID)
+		hub.Unregister <- c
 		c.Conn.Close()
 	}()
 
