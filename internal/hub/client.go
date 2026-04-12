@@ -334,8 +334,14 @@ func readPump(c *models.Client, hub *models.Hub, roomManager *models.RoomManager
 				}
 			}
 		}
+		case "clearCanvas":
+			log.Printf("clearCanvas received from client %s", c.ID)
+			msg.RoomID = c.RoomID
+			msg.UserID = c.ID
+			hub.Broadcast <- msg
 		case "draw":
 			msg.RoomID = c.RoomID
+			msg.UserID = c.ID
 			hub.Broadcast <- msg
 		default:
 			hub.Broadcast <- msg

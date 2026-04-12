@@ -129,5 +129,8 @@ window.addEventListener('load', () => {
     
     document.getElementById('clearCanvas').addEventListener('click', () => {
         drawingCanvas.clearCanvas();
+        if (ws && ws.readyState === WebSocket.OPEN) {
+            ws.send(JSON.stringify({ type: 'clearCanvas', data: {} }));
+        }
     });
 });

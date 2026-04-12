@@ -52,14 +52,12 @@
     <script src="/static/js/canvas.js"></script>
     <script src="/static/js/game.js"></script>
     <script>
-        connectWebSocket();
-        // Initialize game UI after a short delay to ensure WebSocket is ready
         setTimeout(() => {
             if (window.currentPlayers) {
                 window.updateGameUI();
             }
         }, 100);
         
-            </script>
+    </script>
 </body>
 </html>

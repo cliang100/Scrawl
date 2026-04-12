@@ -22,7 +22,8 @@ function connectWebSocket() {
         const message = JSON.parse(event.data);
         console.log('Message from server:', message);
 
-        if (message.userId) {
+        const identityMessages = ['gameStateUpdate', 'roomCreated', 'roomJoined', 'getWords', 'getGameState'];
+        if (message.userId && identityMessages.includes(message.type)) {
             currentUserId = message.userId;
             console.log('Set currentUserId to:', currentUserId);
         }
@@ -98,8 +99,9 @@ function connectWebSocket() {
                 currentWord = null;
 
                 // Clear canvas
-                if (drawingCanvas && drawingCanvas.ctx) {
-                    drawingCanvas.ctx.clearRect(0, 0, drawingCanvas.canvas.width, drawingCanvas.canvas.height);
+                if (drawingCanvas) {
+                    drawingCanvas.clearCanvas();
+                    drawingCanvas.ctx.beginPath();
                 }
 
                 // Show notification in chat
@@ -111,10 +113,20 @@ function connectWebSocket() {
 
                 updateGameUI();
                 break;
+            case 'clearCanvas':
+            console.log('clearCanvas message received');
+            if (message.userId !== currentUserId && drawingCanvas) {
+                drawingCanvas.clearCanvas();
+                drawingCanvas.ctx.beginPath();
+            }
+            break;
         }
 
         if (message.type === 'draw' && drawingCanvas) {
-            handleDrawEvent(message.data);
+            console.log('Draw event - message.userId:', message.userId, 'currentUserId:', currentUserId);
+            if (message.userId !== currentUserId) {
+                handleDrawEvent(message.data);    
+            }
         }
     };
 
@@ -152,8 +164,7 @@ function handleDrawEvent(data) {
             break;
         case 'stop':
             drawingCanvas.ctx.closePath();
+            drawingCanvas.ctx.beginPath();
             break;
     }
 }
-
-window.addEventListener('load', connectWebSocket);
