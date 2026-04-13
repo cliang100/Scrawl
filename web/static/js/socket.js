@@ -119,7 +119,19 @@ function connectWebSocket() {
                 drawingCanvas.clearCanvas();
                 drawingCanvas.ctx.beginPath();
             }
-            break;
+                break;
+            case 'gameOver':
+                console.log('Processing gameOver:', message.data);
+                if (drawingCanvas) {
+                    drawingCanvas.clearCanvas();
+                }
+                document.querySelector('.game-container').innerHTML = `
+                    <div class="game-over">
+                        <h1>Game Over!</h1>
+                        <button onclick="window.location.href='/'">Play Again</button>
+                    </div>
+                `;
+                break;
         }
 
         if (message.type === 'draw' && drawingCanvas) {

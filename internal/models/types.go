@@ -42,6 +42,8 @@ type Room struct {
 	CurrentWord     string
 	TurnOrder       []string
 	Round           int
+	MaxRounds		int
+	TurnCount		int
 }
 
 type Player struct {
@@ -77,6 +79,7 @@ func (rm *RoomManager) CreateRoom(hostID, name, avatar string) *Room {
 		CurrentDrawerID: hostID,
 		TurnOrder:       []string{hostID},
 		Round:           1,
+		// TODO: add defaults for new types?
 	}
 
 	room.Players[hostID] = hostPlayer
