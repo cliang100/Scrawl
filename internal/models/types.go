@@ -44,6 +44,7 @@ type Room struct {
 	Round           int
 	MaxRounds		int
 	TurnCount		int
+	CancelTimer		chan struct{}
 }
 
 type Player struct {
@@ -79,7 +80,6 @@ func (rm *RoomManager) CreateRoom(hostID, name, avatar string) *Room {
 		CurrentDrawerID: hostID,
 		TurnOrder:       []string{hostID},
 		Round:           1,
-		// TODO: add defaults for new types?
 	}
 
 	room.Players[hostID] = hostPlayer

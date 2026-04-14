@@ -59,6 +59,7 @@ function connectWebSocket() {
                 console.log('Processing wordSelected:', message.data);
                 currentWord = message.data.word;
                 currentDrawerId = message.data.drawerID;
+                hideWordSelection();
                 updateGameUI();
                 
                 // Update word display for all players
@@ -131,6 +132,10 @@ function connectWebSocket() {
                         <button onclick="window.location.href='/'">Play Again</button>
                     </div>
                 `;
+                break;
+            case 'timerStart':
+                console.log('Processing timerStart:', message.data);
+                startCountdown(message.data.duration);
                 break;
         }
 

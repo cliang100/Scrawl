@@ -2,6 +2,7 @@ let currentRoom = null;
 let currentUserId = null;
 let currentDrawerId = null;
 let currentWord = null;
+let countdownInterval = null;
 let turnOrder = [];
 let isDrawer = false;
 let isHost = false;
@@ -345,6 +346,23 @@ function selectWord(word) {
         // Hide word selection overlay
         hideWordSelection();
     }
+}
+
+function startCountdown(duration) {
+    if (countdownInterval) clearInterval(countdownInterval);
+
+    let timeLeft = duration;
+    const timerEl = document.getElementById('timer');
+    if (timerEl) timerEl.textContent = timeLeft;
+
+    countdownInterval = setInterval(() => {
+        timeLeft--;
+        if (timerEl) timerEl.textContent = timeLeft;
+        if (timeLeft <= 0) {
+            clearInterval(countdownInterval);
+            countdownInterval = null;
+        }
+    }, 1000);
 }
 
 function showGuessingUI() {

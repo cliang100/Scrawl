@@ -5,12 +5,151 @@ import (
 	"log"
 	"math/rand"
 	"strings"
+	"time"
 	"scrawl/internal/models"
 	"scrawl/internal/words"
 
 	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
 )
+
+func startWordSelectionTimer(hub *models.Hub, roomManager *models.RoomManager, roomCode string, drawerID string, words []string) {
+	room := roomManager.Rooms[roomCode]
+	if room == nil {
+		return
+	}
+
+	if room.CancelTimer != nil {
+		close(room.CancelTimer)
+		room.CancelTimer = nil
+	}
+
+	room.CancelTimer = make(chan struct{})
+	cancelChan := room.CancelTimer
+
+	hub.Broadcast <- models.Message{
+		Type: "timerStart",
+		Data: map[string]interface{}{
+			"duration": 15,
+			"phase":    "wordSelection",
+		},
+		RoomID: roomCode,
+	}
+
+	go func() {
+		timer := time.NewTimer(15 * time.Second)
+		select {
+		case <-timer.C:
+			room := roomManager.Rooms[roomCode]
+			if room == nil || room.CurrentWord != "" {
+				return
+			}
+			shuffled := make([]string, len(words))
+			copy(shuffled, words)
+			for i := len(shuffled) - 1; i > 1; i-- {
+				j := rand.Intn(i + 1)
+				shuffled[i], shuffled[j] = shuffled[j], shuffled[i]
+			}
+			room.CurrentWord = shuffled[0]
+
+			hub.Broadcast <- models.Message{
+				Type: "wordSelected",
+				Data: map[string]interface{}{
+					"word":     room.CurrentWord,
+					"drawerID": drawerID,
+				},
+				RoomID: roomCode,
+			}
+
+			room.CancelTimer = make(chan struct{})
+			drawCancelChan := room.CancelTimer
+
+			go func() {
+				timer := time.NewTimer(80 * time.Second)
+				hub.Broadcast <- models.Message{
+					Type: "timerStart",
+					Data: map[string]interface{}{
+						"duration": 80,
+					},
+					RoomID: roomCode,
+				}
+				select {
+				case <-timer.C:
+					room := roomManager.Rooms[roomCode]
+					if room == nil || room.State != "playing" {
+						return
+					}
+					room.CurrentWord = ""
+					room.TurnCount++
+					if room.TurnCount >= len(room.TurnOrder) {
+						room.Round++
+						room.TurnCount = 0
+					}
+					if room.Round > room.MaxRounds {
+						room.State = "finished"
+						hub.Broadcast <- models.Message{
+							Type: "gameOver",
+							Data: map[string]interface{}{"message": "Game over!"},
+							RoomID: roomCode,
+						}
+						return
+					}
+					currentIndex := 0
+					for i, id := range room.TurnOrder {
+						if id == room.CurrentDrawerID {
+							currentIndex = i
+							break
+						}
+					}
+					nextIndex := (currentIndex + 1) % len(room.TurnOrder)
+					room.CurrentDrawerID = room.TurnOrder[nextIndex]
+
+					hub.Broadcast <- models.Message{
+						Type: "turnEnd",
+						Data: map[string]interface{}{
+							"correctGuesser": "",
+							"guesserName":	  "",
+							"nextDrawerId":	  room.CurrentDrawerID,
+							"round":		  room.Round,
+							"maxRounds":	  room.MaxRounds,
+							"timedOut":		  true,
+						},
+						RoomID: roomCode,
+					}
+
+					hub.Mu.RLock()
+					if roomClients, ok := hub.Rooms[roomCode]; ok {
+						for client := range roomClients {
+							if client.ID == room.CurrentDrawerID {
+								shuffled := make([]string, len(words))
+								copy(shuffled, words)
+								for i := len(shuffled) - 1; i > 1; i-- {
+									j := rand.Intn(i + 1)
+									shuffled[i], shuffled[j] = shuffled[j], shuffled[i]
+								}
+								client.Send <- models.Message{
+									Type: "getWords",
+									Data: map[string]interface{}{
+										"words": shuffled[:3],
+									},
+									UserID: client.ID,
+									RoomID: roomCode,
+								}
+								break
+							}
+						}
+					}
+					hub.Mu.RUnlock()
+					startWordSelectionTimer(hub, roomManager, roomCode, room.CurrentDrawerID, words)
+				case <-drawCancelChan:
+					timer.Stop()
+				}
+			}()
+		case <-cancelChan:
+			timer.Stop()
+		}
+	}()
+}
 
 func HandleClient(ws *websocket.Conn, hub *models.Hub, roomID string, roomManager *models.RoomManager) {
 	client := &models.Client{
@@ -161,6 +300,8 @@ func readPump(c *models.Client, hub *models.Hub, roomManager *models.RoomManager
 					UserID: c.ID,
 					RoomID: room.Code,
 				}
+
+				startWordSelectionTimer(hub, roomManager, room.Code, room.CurrentDrawerID, words.DrawingWords)
 			}
 		case "getWords":
 			words := words.DrawingWords
@@ -188,6 +329,107 @@ func readPump(c *models.Client, hub *models.Hub, roomManager *models.RoomManager
 			room := roomManager.Rooms[c.RoomID]
 			if room.CurrentDrawerID == c.ID {
 				room.CurrentWord = word
+
+				if room.CancelTimer != nil {
+					close(room.CancelTimer)
+					room.CancelTimer = nil
+				}
+
+				room.CancelTimer = make(chan struct{})
+				cancelChan := room.CancelTimer
+
+				go func() {
+					timer := time.NewTimer(80 * time.Second)
+
+					hub.Broadcast <- models.Message{
+						Type: "timerStart",
+						Data: map[string]interface{}{
+							"duration": 80,
+						},
+						RoomID: c.RoomID,
+					}
+
+					select {
+						case <-timer.C:
+							log.Printf("Timer expired for room %s", c.RoomID)
+							room := roomManager.Rooms[c.RoomID]
+							if room == nil || room.State != "playing" {
+								return
+							}
+
+							room.CurrentWord = ""
+							room.TurnCount++
+
+							if room.TurnCount >= len(room.TurnOrder) {
+								room.Round++
+								room.TurnCount = 0
+							}
+
+							if room.Round > room.MaxRounds {
+								room.State = "finished"
+								hub.Broadcast <- models.Message{
+									Type: "gameOver",
+									Data: map[string]interface{}{
+										"message": "Game over!",
+									},
+									RoomID: c.RoomID,
+								}
+								return
+							}
+							
+							currentIndex := 0
+							for i, id := range room.TurnOrder {
+								if id == room.CurrentDrawerID {
+									currentIndex = i
+									break
+								}
+							}
+							nextIndex := (currentIndex + 1) % len(room.TurnOrder)
+							room.CurrentDrawerID = room.TurnOrder[nextIndex]
+
+							hub.Broadcast <- models.Message{
+								Type: "turnEnd",
+								Data: map[string]interface{}{
+									"correctGuesser": "",
+									"guesserName":	  "",
+									"nextDrawerId":	  room.CurrentDrawerID,
+									"round":		  room.Round,
+									"maxRounds":	  room.MaxRounds,
+									"timedOut":		  true,
+								},
+								RoomID: c.RoomID,
+							}
+
+							hub.Mu.RLock()
+							if roomClients, ok := hub.Rooms[c.RoomID]; ok {
+								for client := range roomClients {
+									if client.ID == room.CurrentDrawerID {
+										shuffled := make([]string, len(words.DrawingWords))
+										copy(shuffled, words.DrawingWords)
+										for i := len(shuffled) - 1; i > 1; i -- {
+											j := rand.Intn(i + 1)
+											shuffled[i], shuffled[j] = shuffled[j], shuffled[i]
+										}
+										client.Send <- models.Message{
+											Type: "getWords",
+											Data: map[string]interface{}{
+												"words": shuffled[:3],
+											},
+											UserID: client.ID,
+											RoomID: c.RoomID,
+										}
+										break
+									}
+								}
+							}
+							hub.Mu.RUnlock()
+							
+							startWordSelectionTimer(hub, roomManager, c.RoomID, room.CurrentDrawerID, words.DrawingWords)
+						case <-cancelChan:
+							timer.Stop()
+							log.Printf("Timer cancelled for room %s", c.RoomID)
+					}
+				}()
 
 				response := models.Message{
 					Type: "wordSelected",
@@ -266,92 +508,101 @@ func readPump(c *models.Client, hub *models.Hub, roomManager *models.RoomManager
 					UserID: c.ID,
 					RoomID: roomCode,
 				}
+
+				startWordSelectionTimer(hub, roomManager, roomCode, room.CurrentDrawerID, words.DrawingWords)
 			}
 		case "guess":
-		guess := msg.Data.(map[string]interface{})["guess"].(string)
-		userName := msg.Data.(map[string]interface{})["userName"].(string)
-		room := roomManager.Rooms[c.RoomID]
+			guess := msg.Data.(map[string]interface{})["guess"].(string)
+			userName := msg.Data.(map[string]interface{})["userName"].(string)
+			room := roomManager.Rooms[c.RoomID]
 
-		if room == nil {
-			continue
-		}
-
-		hub.Broadcast <- models.Message{
-			Type: "guess",
-			Data: map[string]interface{}{
-				"guess":	guess,
-				"userName": userName,
-				"userId":	c.ID,
-			},
-			RoomID: c.RoomID,
-		}
-
-		if strings.EqualFold(guess, room.CurrentWord) {
-			room.CurrentWord = ""
-
-			room.TurnCount++
-
-			if room.TurnCount >= len(room.TurnOrder) {
-				room.Round++
-				room.TurnCount = 0
+			if room == nil {
+				continue
 			}
 
-			if room.Round > room.MaxRounds {
-				room.State = "finished"
-				hub.Broadcast <- models.Message{
-					Type: "gameOver",
-					Data: map[string]interface{}{
-						"message": "Game over!",
-					},
-					RoomID: c.RoomID,
-				}
-			} else {
-				currentIndex := 0
-				for i, id := range room.TurnOrder {
-					if id == room.CurrentDrawerID {
-						currentIndex = i
-						break
-					}
-				}
-				nextIndex := (currentIndex + 1) % len(room.TurnOrder)
-				room.CurrentDrawerID = room.TurnOrder[nextIndex]
+			hub.Broadcast <- models.Message{
+				Type: "guess",
+				Data: map[string]interface{}{
+					"guess":	guess,
+					"userName": userName,
+					"userId":	c.ID,
+				},
+				RoomID: c.RoomID,
+			}
 
-				hub.Broadcast <- models.Message{
-					Type: "turnEnd",
-					Data: map[string]interface{}{
-						"correctGuesser": c.ID,
-						"guesserName": 	  userName,
-						"nextDrawerId":	  room.CurrentDrawerID,
-						"round":		  room.Round,
-						"maxRounds":	  room.MaxRounds,
-					},
-					RoomID: c.RoomID,
+			if strings.EqualFold(guess, room.CurrentWord) {
+				if room.CancelTimer != nil {
+					close(room.CancelTimer)
+					room.CancelTimer = nil
 				}
-				if roomClients, ok := hub.Rooms[c.RoomID]; ok {
-					hub.Mu.RLock()
-					for client := range roomClients {
-						if client.ID == room.CurrentDrawerID {
-							shuffled := make([]string, len(words.DrawingWords))
-							copy(shuffled, words.DrawingWords)
-							for i := len(shuffled) - 1; i > 1; i -- {
-								j := rand.Intn(i + 1)
-								shuffled[i], shuffled[j] = shuffled[j], shuffled[i]
-							}
-							client.Send <- models.Message{
-								Type: "getWords",
-								Data: map[string]interface{}{
-									"words": shuffled[:3],
-								},
-								UserID: client.ID,
-								RoomID: c.RoomID,
-							}
+				
+				room.CurrentWord = ""
+
+				room.TurnCount++
+
+				if room.TurnCount >= len(room.TurnOrder) {
+					room.Round++
+					room.TurnCount = 0
+				}
+
+				if room.Round > room.MaxRounds {
+					room.State = "finished"
+					hub.Broadcast <- models.Message{
+						Type: "gameOver",
+						Data: map[string]interface{}{
+							"message": "Game over!",
+						},
+						RoomID: c.RoomID,
+					}
+				} else {
+					currentIndex := 0
+					for i, id := range room.TurnOrder {
+						if id == room.CurrentDrawerID {
+							currentIndex = i
 							break
 						}
 					}
-					hub.Mu.RUnlock()
+					nextIndex := (currentIndex + 1) % len(room.TurnOrder)
+					room.CurrentDrawerID = room.TurnOrder[nextIndex]
+
+					hub.Broadcast <- models.Message{
+						Type: "turnEnd",
+						Data: map[string]interface{}{
+							"correctGuesser": c.ID,
+							"guesserName": 	  userName,
+							"nextDrawerId":	  room.CurrentDrawerID,
+							"round":		  room.Round,
+							"maxRounds":	  room.MaxRounds,
+						},
+						RoomID: c.RoomID,
+					}
+					if roomClients, ok := hub.Rooms[c.RoomID]; ok {
+						hub.Mu.RLock()
+						for client := range roomClients {
+							if client.ID == room.CurrentDrawerID {
+								shuffled := make([]string, len(words.DrawingWords))
+								copy(shuffled, words.DrawingWords)
+								for i := len(shuffled) - 1; i > 1; i -- {
+									j := rand.Intn(i + 1)
+									shuffled[i], shuffled[j] = shuffled[j], shuffled[i]
+								}
+								client.Send <- models.Message{
+									Type: "getWords",
+									Data: map[string]interface{}{
+										"words": shuffled[:3],
+									},
+									UserID: client.ID,
+									RoomID: c.RoomID,
+								}
+								break
+							}
+						}
+						hub.Mu.RUnlock()
+					}
+
+					startWordSelectionTimer(hub, roomManager, c.RoomID, room.CurrentDrawerID, words.DrawingWords)
 				}
 			}
-		}
 		case "clearCanvas":
 			log.Printf("clearCanvas received from client %s", c.ID)
 			msg.RoomID = c.RoomID
