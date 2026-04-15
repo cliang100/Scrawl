@@ -50,7 +50,7 @@ func startWordSelectionTimer(hub *models.Hub, roomManager *models.RoomManager, r
 			if client.ID == drawerID {
 				shuffled := make([]string, len(words))
 				copy(shuffled, words)
-				for i := len(shuffled) - 1; i > 1; i-- {
+				for i := len(shuffled) - 1; i > 0; i-- {
 					j := rand.Intn(i + 1)
 					shuffled[i], shuffled[j] = shuffled[j], shuffled[i]
 				}
@@ -78,7 +78,7 @@ func startWordSelectionTimer(hub *models.Hub, roomManager *models.RoomManager, r
 			}
 			shuffled := make([]string, len(words))
 			copy(shuffled, words)
-			for i := len(shuffled) - 1; i > 1; i-- {
+			for i := len(shuffled) - 1; i > 0; i-- {
 				j := rand.Intn(i + 1)
 				shuffled[i], shuffled[j] = shuffled[j], shuffled[i]
 			}
@@ -268,6 +268,15 @@ func readPump(c *models.Client, hub *models.Hub, roomManager *models.RoomManager
 			room.State = "playing"
 			room.MaxRounds = 3
 			room.TurnCount = 0
+
+			shuffled := make([]string,len(room.TurnOrder))
+			copy(shuffled, room.TurnOrder)
+			for i := len(shuffled) - 1; i > 0; i-- {
+				j := rand.Intn(i + 1)
+				shuffled[i], shuffled[j] = shuffled[j], shuffled[i]
+			}
+			room.TurnOrder = shuffled
+
 			room.CurrentDrawerID = room.TurnOrder[0]
 
 			hub.Broadcast <- models.Message{
@@ -289,7 +298,7 @@ func readPump(c *models.Client, hub *models.Hub, roomManager *models.RoomManager
 					if client.ID == room.CurrentDrawerID {
 						shuffled := make([]string,len(words.DrawingWords))
 						copy(shuffled, words.DrawingWords)
-						for i := len(shuffled) - 1; i > 1; i -- {
+						for i := len(shuffled) - 1; i > 0; i-- {
 							j := rand.Intn(i + 1)
 							shuffled[i], shuffled[j] = shuffled[j], shuffled[i]
 						}
@@ -314,7 +323,7 @@ func readPump(c *models.Client, hub *models.Hub, roomManager *models.RoomManager
 			shuffled := make([]string, len(words))
 			copy(shuffled, words)
 
-			for i := len(shuffled) - 1; i > 1; i-- {
+			for i := len(shuffled) - 1; i > 0; i-- {
 				j := rand.Intn(i + 1)
 				shuffled[i], shuffled[j] = shuffled[j], shuffled[i]
 			}
@@ -424,7 +433,7 @@ func readPump(c *models.Client, hub *models.Hub, roomManager *models.RoomManager
 								if client.ID == room.CurrentDrawerID {
 									shuffled := make([]string, len(words.DrawingWords))
 									copy(shuffled, words.DrawingWords)
-									for i := len(shuffled) - 1; i > 1; i -- {
+									for i := len(shuffled) - 1; i > 0; i-- {
 										j := rand.Intn(i + 1)
 										shuffled[i], shuffled[j] = shuffled[j], shuffled[i]
 									}
@@ -514,7 +523,7 @@ func readPump(c *models.Client, hub *models.Hub, roomManager *models.RoomManager
 			if room.CurrentDrawerID == c.ID && room.CurrentWord == "" && room.State == "playing" {
 				shuffled := make([]string, len(words.DrawingWords))
 				copy(shuffled, words.DrawingWords)
-				for i := len(shuffled) - 1; i > 1; i-- {
+				for i := len(shuffled) - 1; i > 0; i-- {
 					j := rand.Intn(i + 1)
 					shuffled[i], shuffled[j] = shuffled[j], shuffled[i]
 				}
@@ -602,7 +611,7 @@ func readPump(c *models.Client, hub *models.Hub, roomManager *models.RoomManager
 							if client.ID == room.CurrentDrawerID {
 								shuffled := make([]string, len(words.DrawingWords))
 								copy(shuffled, words.DrawingWords)
-								for i := len(shuffled) - 1; i > 1; i -- {
+								for i := len(shuffled) - 1; i > 0; i-- {
 									j := rand.Intn(i + 1)
 									shuffled[i], shuffled[j] = shuffled[j], shuffled[i]
 								}
