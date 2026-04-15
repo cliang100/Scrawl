@@ -239,27 +239,24 @@ function updateGameUI() {
     
     console.log('Drawing permissions check:', { isDrawer, currentUserId, currentDrawerId });
     
-    if (isDrawer) {
+    if (isDrawer && currentWord) {
         if (canvas) canvas.style.pointerEvents = 'auto';
         if (tools) tools.style.display = 'block';
         if (guessInput) guessInput.style.display = 'none';
-        
-        // Auto-request words if no word is selected yet
-        console.log('Word selection logic:', { currentWord, isDrawer });
-        if (!currentWord && isDrawer) {
-            console.log('Auto-requesting words for drawer');
-            showWordSelection(); // This should create the overlay
-            selectWordFromServer();
-        } else if (currentWord && isDrawer) {
-            // Show current word being drawn
-            console.log('Showing current word:', currentWord);
-            showCurrentWord();
-        }
-    } else {
+        showCurrentWord();
+    } else if (isDrawer && !currentWord) {
         if (canvas) canvas.style.pointerEvents = 'none';
         if (tools) tools.style.display = 'none';
-        if (guessInput) guessInput.style.display = 'block';
-        showGuessingUI();
+    } else {
+        if (canvas) {
+            canvas.style.pointerEvents = 'none';
+        }
+        if (tools) {
+            tools.style.display = 'none';
+        }
+        if (guessInput) {
+            guessInput.style.display = 'block';
+        }
     }
 }
 
@@ -286,44 +283,10 @@ function getPlayerName(playerId) {
     return player ? player.name : 'Someone';
 }
 
-function showWordSelection() {
-    console.log('showWordSelection called, isDrawer:', isDrawer);
-    if (!isDrawer) return; 
-    if (window.wordSelectionOverlay) return;
-    
-    // Create overlay
-    const overlay = document.createElement('div');
-    overlay.className = 'word-selection-overlay';
-    overlay.innerHTML = `
-        <div class="word-selection-modal">
-            <h3>Choose a word to draw:</h3>
-            <div class="word-options">
-                <button class="word-btn" onclick="selectWordFromServer()">Get Words</button>
-            </div>
-        </div>
-    `;
-    
-    // Add to body and remove when word is selected
-    document.body.appendChild(overlay);
-    
-    // Store reference to remove later
-    window.wordSelectionOverlay = overlay;
-}
-
 function hideWordSelection() {
     if (window.wordSelectionOverlay) {
         document.body.removeChild(window.wordSelectionOverlay);
         window.wordSelectionOverlay = null;
-    }
-}
-
-function selectWordFromServer() {
-    if (ws && ws.readyState === WebSocket.OPEN) {
-        ws.send(JSON.stringify({
-            type: 'getWords',
-            data: {}
-        }));
-        console.log('Requested words from server');
     }
 }
 

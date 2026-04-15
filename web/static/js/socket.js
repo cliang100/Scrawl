@@ -22,8 +22,8 @@ function connectWebSocket() {
         const message = JSON.parse(event.data);
         console.log('Message from server:', message);
 
-        const identityMessages = ['gameStateUpdate', 'roomCreated', 'roomJoined', 'getWords', 'getGameState'];
-        if (message.userId && identityMessages.includes(message.type)) {
+        const initialConnectionMessages = ['roomCreated', 'roomJoined', 'gameStateUpdate'];
+        if (message.userId && initialConnectionMessages.includes(message.type) && !currentUserId) {
             currentUserId = message.userId;
             console.log('Set currentUserId to:', currentUserId);
         }
@@ -52,12 +52,13 @@ function connectWebSocket() {
                 window.location.href = `/game?room=${message.data.roomCode}&name=${encodeURIComponent(name)}`;
                 break;
             case 'gameStateUpdate':
-                console.log('Processing gameStateeUpdate:', message.data);
+                console.log('Processing gameStateUpdate:', message.data);
                 handleGameStateUpdate(message.data);
                 break;
             case 'wordSelected':
                 console.log('Processing wordSelected:', message.data);
                 currentWord = message.data.word;
+                console.log('currentWord set to:', currentWord);
                 currentDrawerId = message.data.drawerID;
                 hideWordSelection();
                 updateGameUI();
@@ -74,18 +75,32 @@ function connectWebSocket() {
                 break;
             case 'getWords':
                 console.log('Processing getWords:', message.data);
-                if (window.wordSelectionOverlay) {
-                    const words = message.data.words;
-                    const modal = window.wordSelectionOverlay.querySelector('.word-selection-modal');
-                    modal.innerHTML = `
-                        <h3>Choose a word to draw:</h3>
-                        <div class="word-options">
-                            ${words.map(word => 
-                                `<button class="word-btn" onclick="selectWord('${word}')">${word}</button>`
-                            ).join('')}
-                        </div>
-                    `;
+                console.log('words array:', message.data.words);
+                const words = message.data.words;
+
+                if (!window.wordSelectionOverlay) {
+                    console.log('Creating new overlay');
+                    const overlay = document.createElement('div');
+                    overlay.className = 'word-selection-overlay';
+                    document.body.appendChild(overlay);
+                    window.wordSelectionOverlay = overlay;
                 }
+                const modal = window.wordSelectionOverlay.querySelector('.word-selection-modal')
+                    || (() => {
+                        const m = document.createElement('div');
+                        m.className = 'word-selection-modal';
+                        window.wordSelectionOverlay.appendChild(m);
+                        return m;
+                    })();
+
+                modal.innerHTML = `
+                    <h3>Choose a word to draw:</h3>
+                    <div class="word-options">
+                        ${words.map(word => 
+                            `<button class="word-btn" onclick="selectWord('${word}')">${word}</button>`
+                        ).join('')}
+                    </div>
+                `;
                 break;
             case 'guess':
                 console.log('Processing guess:', message.data);
@@ -108,7 +123,9 @@ function connectWebSocket() {
                 // Show notification in chat
                 const notification = document.createElement('div');
                 notification.className = 'correct-guess-notification';
-                notification.textContent = `✅ ${message.data.guesserName} guessed correctly!`;
+                notification.textContent = message.data.timedOut
+                    ? `⏰ Time's up! No one guessed in time.`
+                    : `✅ ${message.data.guesserName} guessed correctly!`;
                 const chatDiv = document.querySelector('.chat');
                 if (chatDiv) chatDiv.prepend(notification);
 
@@ -134,8 +151,22 @@ function connectWebSocket() {
                 `;
                 break;
             case 'timerStart':
-                console.log('Processing timerStart:', message.data);
-                startCountdown(message.data.duration);
+                const deadline = message.data.deadline * 1000;
+
+                if (countdownInterval) clearInterval(countdownInterval);
+
+                countdownInterval = setInterval(() => {
+                    const now = Date.now();
+                    const remaining = Math.ceil((deadline - now) / 1000);
+                    const timerEl = document.getElementById('timer');
+
+                    if (remaining <= 0) {
+                        clearInterval(countdownInterval);
+                        if (timerEl) timerEl.textContent = '0';
+                    } else {
+                        if (timerEl) timerEl.textContent = remaining;
+                    }
+                }, 100);
                 break;
         }
 

@@ -47,6 +47,10 @@ class DrawingCanvas {
     }
     
     startDrawing(e) {
+        if (currentDrawerId !== currentUserId || !currentWord) {
+            return;
+        }
+
         this.isDrawing = true;
         const rect = this.canvas.getBoundingClientRect();
         const x = e.clientX - rect.left;

@@ -4,6 +4,7 @@ import (
 	"crypto/rand"
 	"fmt"
 	"math/big"
+	"time"
 	"sync"
 
 	"github.com/gorilla/websocket"
@@ -45,6 +46,8 @@ type Room struct {
 	MaxRounds		int
 	TurnCount		int
 	CancelTimer		chan struct{}
+	TimerGeneration int
+	TimerDeadline	time.Time
 }
 
 type Player struct {
@@ -124,4 +127,12 @@ func generateRoomCode() string {
 	}
 
 	return string(result)
+}
+
+func (rm *RoomManager) Lock() {
+	rm.mu.Lock()
+}
+
+func (rm *RoomManager) Unlock() {
+	rm.mu.Unlock()
 }
