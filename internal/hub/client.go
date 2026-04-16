@@ -398,6 +398,7 @@ func readPump(c *models.Client, hub *models.Hub, roomManager *models.RoomManager
 								Type: "gameOver",
 								Data: map[string]interface{}{
 									"message": "Game over!",
+									"scores":  room.Players,
 								},
 								RoomID: c.RoomID,
 							}
@@ -419,6 +420,7 @@ func readPump(c *models.Client, hub *models.Hub, roomManager *models.RoomManager
 							Data: map[string]interface{}{
 								"correctGuesser": "",
 								"guesserName":	  "",
+								"scores": 		  room.Players,
 								"nextDrawerId":	  room.CurrentDrawerID,
 								"round":		  room.Round,
 								"maxRounds":	  room.MaxRounds,
@@ -514,6 +516,8 @@ func readPump(c *models.Client, hub *models.Hub, roomManager *models.RoomManager
 					"turnOrder":       room.TurnOrder,
 					"players":         room.Players,
 					"currentWord":     room.CurrentWord,
+					"round":		   room.Round,
+					"maxRounds":	   room.MaxRounds,
 				},
 				UserID: c.ID,
 				RoomID: roomCode,
@@ -595,6 +599,7 @@ func readPump(c *models.Client, hub *models.Hub, roomManager *models.RoomManager
 						Type: "gameOver",
 						Data: map[string]interface{}{
 							"message": "Game over!",
+							"scores":  room.Players,
 						},
 						RoomID: c.RoomID,
 					}

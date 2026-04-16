@@ -227,7 +227,7 @@ function updateGameUI() {
     if (turnStatus) {
         const currentPlayer = turnOrder.find(id => id === currentDrawerId);
         const playerName = currentPlayer ? getPlayerName(currentPlayer) : 'Someone';
-        const statusText = isDrawer ? 'You are drawing!' : `${playerName} is drawing...`;
+        const statusText = isDrawer ? 'You are drawing' : `${playerName} is drawing...`;
         turnStatus.textContent = statusText;
         console.log('Turn status update:', { isDrawer, currentDrawerId, currentUserId, statusText });
     }
@@ -247,16 +247,12 @@ function updateGameUI() {
     } else if (isDrawer && !currentWord) {
         if (canvas) canvas.style.pointerEvents = 'none';
         if (tools) tools.style.display = 'none';
+        showGuessingUI();
     } else {
-        if (canvas) {
-            canvas.style.pointerEvents = 'none';
-        }
-        if (tools) {
-            tools.style.display = 'none';
-        }
-        if (guessInput) {
-            guessInput.style.display = 'block';
-        }
+        if (canvas) canvas.style.pointerEvents = 'none';
+        if (tools) tools.style.display = 'none';
+        if (guessInput) guessInput.style.display = 'block';
+        showGuessingUI();
     }
 }
 
@@ -328,22 +324,23 @@ function startCountdown(duration) {
     }, 1000);
 }
 
+// Guesser
 function showGuessingUI() {
+    const turnStatus = document.getElementById('turnStatus');
     const wordDisplay = document.getElementById('wordDisplay');
-    if (wordDisplay) {
-        wordDisplay.innerHTML = `
-            <div class="guessing-info">
-                <h4>Someone is drawing...</h4>
-                <p>Type your guess in the chat!</p>
-            </div>
-        `;
+    if (turnStatus && wordDisplay) {
+        const currentPlayer = turnOrder.find(id => id === currentDrawerId);
+        const playerName = currentPlayer ? getPlayerName(currentPlayer) : 'Someone';
+        turnStatus.textContent = `${playerName} is drawing...`;
+        wordDisplay.textContent = '';
     }
 }
 
+// Drawer
 function showCurrentWord() {
     const wordDisplay = document.getElementById('wordDisplay');
     if (wordDisplay) {
-        wordDisplay.innerHTML = `<div class="word-display-drawer">You are drawing: <strong>${currentWord}</strong></div>`;
+        wordDisplay.textContent = currentWord;
     }
 }
 
@@ -354,6 +351,12 @@ function handleGameStateUpdate(data) {
     currentPlayers = data.players;
     currentWord = data.currentWord;
     
+    // Update Rounds
+    const roundDisplay = document.getElementById('roundDisplay');
+    if (roundDisplay && data.round && data.maxRounds) {
+        roundDisplay.textContent = `Round ${data.round}/${data.maxRounds}`;
+    }
+
     console.log('After processing - currentDrawerId:', currentDrawerId, 'currentUserId:', currentUserId);
     
     // Update UI after setting all variables
@@ -383,7 +386,15 @@ function sendGuess() {
 document.addEventListener('DOMContentLoaded', function() {
     console.log('DOM loaded, setting up event listeners');
     
-    // The buttons don't have IDs, they use onclick attributes
-    // So we don't need to add event listeners!
+    // Enter key support (guessing)
+    const guessInput = document.getElementById('guessInput');
+    if (guessInput) {
+        guessInput.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') {
+                sendGuess();
+            }
+        });
+    }
+
     console.log('Buttons use onclick attributes, no event listeners needed');
 });

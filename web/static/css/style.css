@@ -77,14 +77,6 @@ canvas:disabled {
     opacity: 0.7;
 }
 
-.chat {
-    margin-top: 20px;
-    display: flex;
-    gap: 10px;
-    justify-content: center;
-    align-items: center;
-}
-
 #guessInput {
     width: 300px;
     padding: 12px 16px;
@@ -97,47 +89,6 @@ canvas:disabled {
 
 #guessInput:focus {
     border-color: #667eea;
-}
-
-.chat button {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: white;
-    border: none;
-    padding: 12px 20px;
-    border-radius: 10px;
-    cursor: pointer;
-    font-weight: 600;
-    transition: all 0.3s ease;
-}
-
-.chat button:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 16px rgba(102, 126, 234, 0.4);
-}
-
-.game-container {
-    text-align: center;
-    max-width: 1000px;
-    margin: 0 auto;
-    background: white;
-    padding: 40px;
-    border-radius: 20px;
-    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
-}
-
-.game-info {
-    display: flex;
-    justify-content: space-between;
-    margin-bottom: 30px;
-    gap: 20px;
-}
-
-.players-section, .turn-info {
-    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-    padding: 20px;
-    border-radius: 15px;
-    border: 1px solid rgba(255, 255, 255, 0.8);
-    flex: 1;
 }
 
 #gamePlayerList {
@@ -437,7 +388,8 @@ body {
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     min-height: 100vh;
     display: flex;
-    align-items: center;
+    flex-direction: column;
+    align-items: stretch;
     justify-content: center;
 }
 
@@ -503,4 +455,279 @@ input:focus {
 canvas {
     border: 2px solid #333;
     background-color: white;
+}
+
+/* Grid Layout */
+.game-layout {
+    display: grid;
+    grid-template-columns: 220px 1fr 320px;
+    gap: 20px;
+    padding: 20px;
+}
+
+.top-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px 20px;
+    background: white;
+    border-radius: 10px;
+    margin: 0 20px;
+}
+
+.top-bar h1 {
+    margin: 0;
+    font-size: 1.5em;
+}
+
+.game-meta {
+    display: flex;
+    gap: 20px;
+    font-weight: 600;
+}
+
+/* Left Sidebar */
+.left-sidebar {
+    align-self: start;
+    background: white;
+    border-radius: 15px;
+    padding: 20px;
+}
+
+.left-sidebar h3 {
+    margin-top: 0;
+    color: #667eea;
+}
+
+/* Center Canvas Area */
+.canvas-area {
+    display: flex;
+    flex-direction: column;
+    background: white;
+    border-radius: 15px;
+    padding: 20px;
+    height: 70vh;
+    overflow: hidden;
+}
+
+.drawing-tools {
+    flex-shrink: 0;
+    margin-bottom: 10px;
+    padding: 10px;
+}
+
+.turn-status {
+    flex-shrink: 0;
+    margin-bottom: 10px;
+}
+
+.canvas-area canvas {
+    flex: 1;
+    width: 100%;
+    min-height: 0;
+}
+
+.turn-status {
+    text-align: center;
+    margin-bottom: 15px;
+}
+
+.drawing-tools-compact {
+    display: flex;
+    gap: 15px;
+    align-items: center;
+    justify-content: center;
+    padding: 10px;
+    background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+    border-radius: 10px;
+    margin-top: 10px;
+}
+
+.drawing-tools-compact input[type="color"] {
+    width: 40px;
+    height: 30px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.drawing-tools-compact input[type="range"] {
+    width: 100px;
+}
+
+.drawing-tools-compact #sizeDisplay {
+    background: #667eea;
+    color: white;
+    padding: 4px 8px;
+    border-radius: 5px;
+    font-weight: 600;
+    font-size: 12px;
+    min-width: 20px;
+    text-align: center;
+}
+
+.drawing-tools-compact button {
+    padding: 8px 16px;
+    font-size: 14px;
+    margin: 0;
+}
+
+.drawing-tools-container .drawing-tools {
+    margin: 0;
+    padding: 10px;
+}
+
+/* Top bar layout */
+.game-title {
+    text-align: center;
+    color: white;
+    margin: 10px 0;
+    font-size: 2.5em;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.top-bar {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 15px 20px;
+    background: white;
+    border-radius: 10px;
+    margin: 0 20px 10px 20px;
+}
+
+.game-meta {
+    display: grid;
+    grid-template-columns: 1fr auto auto;
+    gap: 20px;
+    align-items: center;
+    width: 100%;
+}
+
+.meta-left {
+    display: flex;
+    gap: 15px;
+    align-items: center;
+}
+
+.turn-status-center {
+    text-align: center;
+    font-size: 1.3em;
+}
+
+.word-display-center {
+    text-align: right;
+    font-weight: 700;
+    color: #667eea;
+}
+
+.timer-circle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background: linear-gradient(135de, #ff6b6b 0%, #ee5a24 100%);
+    color: white;
+    font-weight: 700;
+    font-size: 1.2em;
+    box-shadow: 0 4px 12px rgba(255, 107, 107, 0.4);
+}
+
+.round-display {
+    font-size: 1.5em;
+    font-weight: 700;
+    color: #667eea;
+}
+
+.turn-status-center {
+    flex: 1;
+    text-align: center;
+    font-size: 1.3em;
+    color: #333;
+}
+
+.word-display-center {
+    text-align: center;
+    font-weight: 700;
+    color: #667eea;
+}
+
+.game-meta span {
+    white-space: nowrap;
+}
+
+#turnStatus {
+    font-weight: normal;
+    color: #666;
+}
+
+#wordDisplay {
+    color: #667eea;
+    font-weight: 700;
+}
+
+/* Game Over Overlay */
+.game-over-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.8);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.game-over-modal {
+    background: white;
+    padding: 30px;
+    border-radius: 15px;
+    text-align: center;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+}
+
+/* right Sidebar - Chat */
+.right-sidebar {
+    align-self: start;
+    background: white;
+    border-radius: 15px;
+    padding: 20px;
+    min-width: 280px;
+}
+
+.chat-container {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    min-height: 400px;
+}
+
+.message-list {
+    flex: 1;
+    overflow-y: auto;
+    padding: 10px;
+    background: #f7f8fa;
+    border-radius: 10px;
+    margin-bottom: 10px;
+}
+
+.chat-input {
+    display: flex;
+    gap: 10px;
+}
+
+.chat-input input {
+    flex: 1;
+    margin: 0;
+    min-width: 0;
+}
+
+.chat-input button {
+    margin: 0;
+    padding: 12px 20px;
+    white-space: nowrap;
 }

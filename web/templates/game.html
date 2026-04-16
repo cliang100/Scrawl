@@ -7,58 +7,56 @@
     <link rel="stylesheet" href="/static/css/style.css">
 </head>
 <body>
-    <div class="game-container">
-        <h1>Game Room</h1>
-        
-        <!-- Game Info -->
-        <div class="game-info">
-            <div class="players-section">
-                <h3>Players</h3>
-                <ul id="gamePlayerList"></ul>
+    <!-- Game Title -->
+     <h1 class="game-title">Scrawl</h1>
+
+    <!-- Top Bar -->
+    <div class="top-bar">
+        <div class="game-meta">
+            <div class="meta-left">
+                <span id="timer" class="timer">80s</span>
+                <span id="roundDisplay" class="round-display">Round 1 of 3</span>
             </div>
-            <div class="turn-info">
-                <div id="timer" class="timer"></div>
-                <h3 id="turnStatus">Waiting for game to start...</h3>
-                <div id="wordDisplay"></div>
-            </div>
-        </div>
-        
-        <!-- Drawing Tools -->
-        <div class="drawing-tools">
-            <div class="tool-group">
-                <label>Color:</label>
-                <input type="color" id="colorPicker" value="#000000">
-            </div>
-            <div class="tool-group">
-                <label>Size:</label>
-                <input type="range" id="brushSize" min="1" max="20" value="2">
-                <span id="sizeDisplay">2</span>
-            </div>
-            <div class="tool-group">
-                <button id="clearCanvas">Clear</button>
-            </div>
-        </div>
-        
-        <!-- Canvas -->
-        <canvas id="drawingCanvas"></canvas>
-        
-        <!-- Chat -->
-        <div class="chat">
-            <input type="text" id="guessInput" placeholder="Type your guess...">
-            <button onclick="sendGuess()">Send</button>
+            <span id="turnStatus" class="turn-status-center">Waiting...</span>
+            <span id="wordDisplay" class="word-display-center"></span>
         </div>
     </div>
-    
+
+    <!-- Main Grid -->
+    <div class="game-layout">
+        <!-- Left: Players -->
+        <div class="left-sidebar">
+            <h3>Players</h3>
+            <ul id="gamePlayerList"></ul>
+            <div class="score-section" id="scoreDisplay"></div>
+        </div>
+
+        <!-- Center: Canvas Area -->
+        <div class="canvas-area">
+            <canvas id="drawingCanvas"></canvas>
+            <div class="drawing-tools-compact">
+                <input type="color" id="colorPicker" value="#000000" title="Color">
+                <input type="range" id="brushSize" min="1" max="20" value="2" title="Size">
+                <span id="sizeDisplay">2</span>
+                <button id="clearCanvas" title="Clear">Clear</button>
+            </div>
+        </div>
+
+        <!-- Right: Chat -->
+        <div class="right-sidebar">
+            <div class="chat-container">
+                <div class="message-list" id="messageList">
+                    <!-- Messages go here -->
+                </div>
+                <div class="chat-input">
+                    <input type="text" id="guessInput" placeholder="Type your guess...">
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script src="/static/js/socket.js"></script>
     <script src="/static/js/canvas.js"></script>
     <script src="/static/js/game.js"></script>
-    <script>
-        setTimeout(() => {
-            if (window.currentPlayers) {
-                window.updateGameUI();
-            }
-        }, 100);
-        
-    </script>
 </body>
 </html>

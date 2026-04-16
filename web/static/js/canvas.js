@@ -11,16 +11,17 @@ class DrawingCanvas {
     }
     
     setupCanvas() {
-        // Set canvas size
-        this.canvas.width = 800;
-        this.canvas.height = 600;
+        setTimeout(() => {
+            const rect = this.canvas.getBoundingClientRect();
+            this.canvas.width = rect.width;
+            this.canvas.height = rect.height;
+            this.clearCanvas();
+        }, 100);
+        
         
         // Set default styles
         this.ctx.lineCap = 'round';
         this.ctx.lineJoin = 'round';
-        
-        // Clear canvas with white background
-        this.clearCanvas();
     }
     
     setupEventListeners() {
@@ -137,4 +138,13 @@ window.addEventListener('load', () => {
             ws.send(JSON.stringify({ type: 'clearCanvas', data: {} }));
         }
     });
+});
+
+window.addEventListener('resize', () => {
+    if (drawingCanvas) {
+        const rect = drawingCanvas.canvas.getBoundingClientRect();
+        drawingCanvas.canvas.width = rect.width;
+        drawingCanvas.canvas.height = rect.height;
+        drawingCanvas.clearCanvas();
+    }
 });

@@ -62,16 +62,6 @@ function connectWebSocket() {
                 currentDrawerId = message.data.drawerID;
                 hideWordSelection();
                 updateGameUI();
-                
-                // Update word display for all players
-                const wordDisplayEl = document.getElementById('wordDisplay');
-                if (wordDisplayEl) {
-                    if (currentDrawerId === currentUserId) {
-                        wordDisplayEl.innerHTML = `<div class="word-display-drawer">You are drawing: <strong>${currentWord}</strong></div>`;
-                    } else {
-                        wordDisplayEl.innerHTML = `<div class="word-display-guesser">Someone is drawing...</div>`;
-                    }
-                }
                 break;
             case 'getWords':
                 console.log('Processing getWords:', message.data);
@@ -126,10 +116,15 @@ function connectWebSocket() {
                 notification.textContent = message.data.timedOut
                     ? `⏰ Time's up! No one guessed in time.`
                     : `✅ ${message.data.guesserName} guessed correctly!`;
-                const chatDiv = document.querySelector('.chat');
+                const chatDiv = document.querySelector('.message-list');
                 if (chatDiv) chatDiv.prepend(notification);
 
                 updateGameUI();
+
+                const roundDisplay = document.getElementById('roundDisplay');
+                if (roundDisplay && message.data.round && message.data.maxRounds) {
+                    roundDisplay.textContent = `Round ${message.data.round}/${message.data.maxRounds}`;
+                }
 
                 if (message.data.scores) {
                     currentPlayers = message.data.scores;
@@ -148,12 +143,25 @@ function connectWebSocket() {
                 if (drawingCanvas) {
                     drawingCanvas.clearCanvas();
                 }
-                document.querySelector('.game-container').innerHTML = `
-                    <div class="game-over">
-                        <h1>Game Over!</h1>
-                        <button onclick="window.location.href='/'">Play Again</button>
+                
+                if (!window.gameOverOverlay) {
+                    const overlay = document.createElement('div');
+                    overlay.className = 'game-over-overlay';
+                    document.body.appendChild(overlay);
+                    window.gameOverOverlay = overlay;
+                }
+
+                const scores = message.data.scores || [];
+                const winner = scores.length > 0 ? scores[0] : null;
+
+                window.gameOverOverlay.innerHTML = `
+                    <div class="game-over-modal">
+                        <h2>🎉 Game Over!</h2>
+                        ${winner ? `<p><strong>${winner.name}</strong> wins with ${winner.score} points!</p>` : ''}
+                        <button onclick="window.location.href='/'" style="margin-top: 20px;">Play Again</button>
                     </div>
                 `;
+                window.gameOverOverlay.style.display = 'flex';
                 break;
             case 'timerStart':
                 const deadline = message.data.deadline * 1000;
