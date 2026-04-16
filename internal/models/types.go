@@ -55,6 +55,7 @@ type Player struct {
 	Name   string `json:"name"`
 	Avatar string `json:"avatar"`
 	IsHost bool   `json:"isHost"`
+	Score  int	  `json:"score"`
 }
 
 type RoomManager struct {

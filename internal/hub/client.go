@@ -565,6 +565,21 @@ func readPump(c *models.Client, hub *models.Hub, roomManager *models.RoomManager
 				}		
 				roomManager.Unlock()
 
+				remainingTime := int(time.Until(room.TimerDeadline).Seconds())
+				guesserPoints := 50
+				if remainingTime > 0 {
+					guesserPoints = 50 + (remainingTime * 250 / 80)
+					if guesserPoints > 300 {
+						guesserPoints = 300
+					}
+				}
+				drawerPoints := guesserPoints / 4
+
+				room.Players[c.ID].Score += guesserPoints
+				room.Players[room.CurrentDrawerID].Score += drawerPoints
+				log.Printf("Points awarded - Guesser %s: %d, Drawer %s: %d",
+					c.ID, guesserPoints, room.CurrentDrawerID, drawerPoints)
+
 				room.CurrentWord = ""
 
 				room.TurnCount++
@@ -602,6 +617,7 @@ func readPump(c *models.Client, hub *models.Hub, roomManager *models.RoomManager
 							"nextDrawerId":	  room.CurrentDrawerID,
 							"round":		  room.Round,
 							"maxRounds":	  room.MaxRounds,
+							"scores":		  room.Players,
 						},
 						RoomID: c.RoomID,
 					}

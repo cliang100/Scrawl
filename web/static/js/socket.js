@@ -130,6 +130,11 @@ function connectWebSocket() {
                 if (chatDiv) chatDiv.prepend(notification);
 
                 updateGameUI();
+
+                if (message.data.scores) {
+                    currentPlayers = message.data.scores;
+                    updateGamePlayerList();
+                }
                 break;
             case 'clearCanvas':
             console.log('clearCanvas message received');

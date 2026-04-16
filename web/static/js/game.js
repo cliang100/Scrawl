@@ -271,7 +271,7 @@ function updateGamePlayerList() {
             const isCurrentDrawer = player.id === currentDrawerId;
             
             li.className = isCurrentDrawer ? 'current-drawer' : '';
-            li.innerHTML = `${avatar} ${name}${player.isHost ? ' (Host)' : ''}${isCurrentDrawer ? ' ✏️' : ''}`;
+            li.innerHTML = `${avatar} ${name} (${player.score || 0})${player.isHost ? ' (Host)' : ''}${isCurrentDrawer ? ' ✏️' : ''}`;
             playerListElement.appendChild(li);
         });
     }
