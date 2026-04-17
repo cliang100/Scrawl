@@ -36,9 +36,29 @@
             <canvas id="drawingCanvas"></canvas>
             <div class="toolbar">
                 <input type="color" id="colorPicker" value="#000000" title="Color">
-                <input type="range" id="brushSize" min="1" max="20" value="2" title="Size">
-                <span id="sizeDisplay">2</span>
-                <button id="clearCanvas" title="Clear">🗑</button>
+                <div class="brush-picker">
+                    <button class="brush-trigger" id="brushTrigger" title="Brush Size">
+                        <span class="brush-icon" data-size="5"></span>
+                    </button>
+                    <div class="brush-options drop-up">
+                        <div class="brush-option" data-size="2" title="Thin">
+                            <div class="brush-preview" style="width: 4px; height: 4px;"></div>
+                        </div>
+                        <div class="brush-option selected" data-size="5" title="Medium-Thin">
+                            <div class="brush-preview" style="width: 8px; height: 8px;"></div>
+                        </div>
+                        <div class="brush-option" data-size="10" title="Medium">
+                            <div class="brush-preview" style="width: 14px; height: 14px;"></div>
+                        </div>
+                        <div class="brush-option" data-size="15" title="Thick">
+                            <div class="brush-preview" style="width: 20px; height: 20px;"></div>
+                        </div>
+                        <div class="brush-option" data-size="20" title="Massive">
+                            <div class="brush-preview" style="width: 26px; height: 26px;"></div>
+                        </div>
+                    </div>
+                </div>
+                <button id="clearCanvas" title="Clear"><span class="trash-icon"></span></button>
             </div>
         </div>
 

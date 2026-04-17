@@ -126,17 +126,53 @@ window.addEventListener('load', () => {
         drawingCanvas.setColor(e.target.value);
     });
     
-    document.getElementById('brushSize').addEventListener('input', (e) => {
-        const size = e.target.value;
-        drawingCanvas.setSize(size);
-        document.getElementById('sizeDisplay').textContent = size;
+    // Brush picker dropdown logic
+    const brushTrigger = document.getElementById('brushTrigger');
+    const brushOptions = document.querySelector('.brush-options');
+    const brushOptionElements = document.querySelectorAll('.brush-option');
+
+    // Set initial size to Medium-Thin (5)
+    drawingCanvas.setSize(5);
+
+    // Toggle dropdown
+    brushTrigger.addEventListener('click', (e) => {
+        e.stopPropagation();
+        brushOptions.classList.toggle('open');
     });
-    
+
+    // Handle option selection
+    brushOptionElements.forEach(option => {
+        option.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const size = parseInt(option.dataset.size);
+            drawingCanvas.setSize(size);
+
+            // Update selection state
+            brushOptionElements.forEach(opt => opt.classList.remove('selected'));
+            option.classList.add('selected');
+
+            // Update brush icon size to match selection
+            const brushIcon = document.querySelector('.brush-icon');
+            if (brushIcon) {
+                brushIcon.setAttribute('data-size', size);
+            }
+
+            // CLose dropdown
+            brushOptions.classList.remove('open');
+        });
+    });
+
+    // Clear canvas button
     document.getElementById('clearCanvas').addEventListener('click', () => {
         drawingCanvas.clearCanvas();
         if (ws && ws.readyState === WebSocket.OPEN) {
             ws.send(JSON.stringify({ type: 'clearCanvas', data: {} }));
         }
+    });
+    
+    // Close dropdown when clicking outside
+    document.addEventListener('click', () => {
+        brushOptions.classList.remove('open');
     });
 });
 

@@ -54,15 +54,6 @@
     box-shadow: 0 6px 16px rgba(255, 107, 107, 0.4);
 }
 
-#sizeDisplay {
-    background: #667eea;
-    color: white;
-    padding: 4px 8px;
-    border-radius: 5px;
-    font-weight: 600;
-    font-size: 12px;
-}
-
 canvas {
     border: 3px solid #e1e5e9;
     background-color: white;
@@ -527,10 +518,189 @@ canvas {
     display: flex;
     gap: 12px;
     align-items: center;
-    background: white;
-    padding: 8px 16px;
-    border-radius: 10px;
+    background: transparent;
+    padding: 0;
+}
+
+/* Individual tool buttons in white boxes - larger, less rounded */
+.toolbar input[type="color"],
+.brush-trigger,
+.toolbar #clearCanvas {
+    width: 64px;
+    height: 64px;
+    border-radius: 4px;
     border: 1px solid #e1e5e9;
+    background: white;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    transition: all 0.2s ease;
+    padding: 0;
+    overflow: hidden;
+}
+
+.toolbar input[type="color"]:hover,
+.brush-trigger:hover,
+.toolbar #clearCanvas:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* Color picker - fill entire button */
+.toolbar input[type="color"] {
+    border: none;
+    padding: 0;
+}
+
+.toolbar input[type="color"]::-webkit-color-swatch-wrapper {
+    padding: 0;
+}
+
+.toolbar input[type="color"]::-webkit-color-swatch {
+    border: none;
+    border-radius: 4px;
+}
+
+/* Trash can icon - cartoony style */
+.trash-icon {
+    width: 32px;
+    height: 32px;
+    position: relative;
+    animation: crayonIdle 0.5s steps(1) infinite;
+}
+
+.trash-icon::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 18px;
+    height: 4px;
+    background: #333;
+    border-radius: 2px 2px 0 0;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.3);
+}
+
+.trash-icon::after {
+    content: '';
+    position: absolute;
+    top: 4px;
+    left: 4px;
+    right: 4px;
+    bottom: 0;
+    background: #333;
+    border-radius: 0 0 2px 2px;
+    box-shadow: 
+        inset 0 2px 0 rgba(255,255,255,0.15),
+        0 2px 3px rgba(0,0,0,0.3);
+}
+
+/* Brush Size Picker */
+.brush-picker {
+    position: relative;
+}
+
+.brush-icon {
+    background: #2a2a2a;
+    border-radius: 42% 58% 48% 52%;
+    display: block;
+    box-shadow: 
+        0 2px 3px rgba(0,0,0,0.3),
+        inset -2px -2px 0 rgba(0,0,0,0.2);
+    animation: crayonIdle 0.5s steps(1) infinite;
+    transition: width 0.2s ease, height 0.2s ease;
+}
+
+/* Default brush icon size */
+.brush-icon[data-size="2"] { width: 8px; height: 8px; }
+.brush-icon[data-size="5"] { width: 14px; height: 14px; }
+.brush-icon[data-size="10"] { width: 20px; height: 20px; }
+.brush-icon[data-size="15"] { width: 26px; height: 26px; }
+.brush-icon[data-size="20"] { width: 32px; height: 32px; }
+
+/* Charlie Brown style - 2 frames only, 2 cycles per second */
+@keyframes crayonIdle {
+    0% { 
+        transform: translate(0, 0);
+        border-radius: 42% 58% 48% 52%;
+    }
+    50% { 
+        transform: translate(1px, -1px);
+        border-radius: 48% 52% 42% 58%;
+    }
+}
+
+/* Drop-up options menu */
+.brush-options {
+    position: absolute;
+    bottom: calc(100% + 10px);
+    left: 50%;
+    transform: translateX(-50%) scale(0);
+    background: white;
+    border-radius: 12px;
+    padding: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.15);
+    border: 1px solid #e1e5e9;
+    opacity: 0;
+    transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+    pointer-events: none;
+    z-index: 100;
+}
+
+.brush-options.open {
+    transform: translateX(-50%) scale(1);
+    opacity: 1;
+    pointer-events: auto;
+}
+
+/* Brush options - white box styling */
+.brush-option {
+    width: 44px;
+    height: 44px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border: 1px solid #e1e5e9;
+    background: white;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+}
+
+.brush-option:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.12);
+    border-color: #667eea;
+}
+
+.brush-option.selected {
+    background: white;
+    border-color: #667eea;
+}
+
+.brush-option.selected .brush-preview {
+    background: #2a2a2a;
+    box-shadow: 
+        0 2px 4px rgba(0,0,0,0.3),
+        inset -1px -1px 0 rgba(0,0,0,0.2);
+}
+
+/* Rough crayon-style circle previews - same 2-frame animation */
+.brush-preview {
+    background: #2a2a2a;
+    border-radius: 42% 58% 48% 52%;
+    box-shadow: 
+        0 2px 3px rgba(0,0,0,0.3),
+        inset -1px -1px 0 rgba(0,0,0,0.2);
+    transition: all 0.2s ease;
+    animation: crayonIdle 0.5s steps(1) infinite;
 }
 
 .drawing-tools {
@@ -544,59 +714,11 @@ canvas {
     margin-bottom: 10px;
 }
 
-.canvas-area canvas {
-    flex: 1;
-    width: 90%;
-    max-width: 70vw;
-    max-height: 55vh;
-    min-height: 0;
-    align-self: center;
-}
-
 .turn-status {
     text-align: center;
     margin-bottom: 15px;
 }
 
-.drawing-tools-compact {
-    display: flex;
-    gap: 15px;
-    align-items: center;
-    justify-content: center;
-    padding: 10px;
-    background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
-    border-radius: 10px;
-    margin-top: 10px;
-}
-
-.drawing-tools-compact input[type="color"] {
-    width: 40px;
-    height: 30px;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-}
-
-.drawing-tools-compact input[type="range"] {
-    width: 100px;
-}
-
-.drawing-tools-compact #sizeDisplay {
-    background: #667eea;
-    color: white;
-    padding: 4px 8px;
-    border-radius: 5px;
-    font-weight: 600;
-    font-size: 12px;
-    min-width: 20px;
-    text-align: center;
-}
-
-.drawing-tools-compact button {
-    padding: 8px 16px;
-    font-size: 14px;
-    margin: 0;
-}
 
 .drawing-tools-container .drawing-tools {
     margin: 0;
