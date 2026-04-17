@@ -522,8 +522,41 @@ canvas {
     padding: 0;
 }
 
+/* Color palette - 2 rows of 13 colors */
+.color-palette {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.color-row {
+    display: flex;
+    gap: 4px;
+}
+
+.color-option {
+    width: 28px;
+    height: 28px;
+    border-radius: 3px;
+    cursor: pointer;
+    border: 2px solid transparent;
+    transition: all 0.15s ease;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+.color-option:hover {
+    transform: scale(1.15);
+    border-color: #333;
+    z-index: 10;
+}
+
+.color-option.selected {
+    border-color: #333;
+    transform: scale(1.1);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+}
+
 /* Individual tool buttons in white boxes - larger, less rounded */
-.toolbar input[type="color"],
 .brush-trigger,
 .toolbar #clearCanvas {
     width: 64px;
@@ -541,26 +574,10 @@ canvas {
     overflow: hidden;
 }
 
-.toolbar input[type="color"]:hover,
 .brush-trigger:hover,
 .toolbar #clearCanvas:hover {
     transform: translateY(-3px);
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-}
-
-/* Color picker - fill entire button */
-.toolbar input[type="color"] {
-    border: none;
-    padding: 0;
-}
-
-.toolbar input[type="color"]::-webkit-color-swatch-wrapper {
-    padding: 0;
-}
-
-.toolbar input[type="color"]::-webkit-color-swatch {
-    border: none;
-    border-radius: 4px;
 }
 
 /* Trash can icon - cartoony style */

@@ -121,10 +121,24 @@ let drawingCanvas;
 window.addEventListener('load', () => {
     drawingCanvas = new DrawingCanvas('drawingCanvas');
     
-    // Setup tool event listeners
-    document.getElementById('colorPicker').addEventListener('change', (e) => {
-        drawingCanvas.setColor(e.target.value);
+    // Color palette selection
+    const colorOptions = document.querySelectorAll('.color-option');
+    colorOptions.forEach(option => {
+        option.addEventListener('click', () => {
+            const color = option.dataset.color;
+            drawingCanvas.setColor(color);
+
+            colorOptions.forEach(opt => opt.classList.remove('selected'));
+            option.classList.add('selected');
+        });
     });
+
+    // Set initial color to black
+    const initialColor = document.querySelector('.color-option[data-color="#000000"]');
+    if (initialColor) {
+        initialColor.classList.add('selected');
+        drawingCanvas.setColor('#000000');
+    }
     
     // Brush picker dropdown logic
     const brushTrigger = document.getElementById('brushTrigger');
