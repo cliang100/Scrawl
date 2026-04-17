@@ -123,7 +123,7 @@ function connectWebSocket() {
 
                 const roundDisplay = document.getElementById('roundDisplay');
                 if (roundDisplay && message.data.round && message.data.maxRounds) {
-                    roundDisplay.textContent = `Round ${message.data.round}/${message.data.maxRounds}`;
+                    roundDisplay.textContent = `Round ${message.data.round} of ${message.data.maxRounds}`;
                 }
 
                 if (message.data.scores) {

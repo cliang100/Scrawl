@@ -354,7 +354,7 @@ function handleGameStateUpdate(data) {
     // Update Rounds
     const roundDisplay = document.getElementById('roundDisplay');
     if (roundDisplay && data.round && data.maxRounds) {
-        roundDisplay.textContent = `Round ${data.round}/${data.maxRounds}`;
+        roundDisplay.textContent = `Round ${data.round} of ${data.maxRounds}`;
     }
 
     console.log('After processing - currentDrawerId:', currentDrawerId, 'currentUserId:', currentUserId);

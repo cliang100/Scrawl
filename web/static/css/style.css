@@ -384,9 +384,11 @@ canvas:disabled {
 body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     margin: 0;
-    padding: 20px;
+    padding: 8px 16px;
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    min-height: 100vh;
+    height: 100vh;
+    overflow: hidden;
+    box-sizing: border-box;
     display: flex;
     flex-direction: column;
     align-items: stretch;
@@ -463,6 +465,9 @@ canvas {
     grid-template-columns: 220px 1fr 320px;
     gap: 20px;
     padding: 20px;
+    flex: 1;
+    min-height: 0;
+    overflow: hidden
 }
 
 .top-bar {
@@ -499,15 +504,33 @@ canvas {
     color: #667eea;
 }
 
-/* Center Canvas Area */
-.canvas-area {
+.center-column {
     display: flex;
     flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    min-height: 0;
+}
+
+.center-column canvas {
+    width: 90%;
+    max-width: 70vw;
+    max-height: 55vh;
+    min-height: 0;
+    border-radius: 10px;
+    border: 3px solid #e1e5e9;
     background: white;
-    border-radius: 15px;
-    padding: 20px;
-    height: 70vh;
-    overflow: hidden;
+    cursor: crosshair;
+}
+
+.toolbar {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    background: white;
+    padding: 8px 16px;
+    border-radius: 10px;
+    border: 1px solid #e1e5e9;
 }
 
 .drawing-tools {
@@ -523,8 +546,11 @@ canvas {
 
 .canvas-area canvas {
     flex: 1;
-    width: 100%;
+    width: 90%;
+    max-width: 70vw;
+    max-height: 55vh;
     min-height: 0;
+    align-self: center;
 }
 
 .turn-status {
@@ -581,8 +607,8 @@ canvas {
 .game-title {
     text-align: center;
     color: white;
-    margin: 10px 0;
-    font-size: 2.5em;
+    margin: 0 0 6px 0;
+    font-size: 1.6em;
     text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
 }
 
@@ -590,10 +616,10 @@ canvas {
     display: flex;
     justify-content: center;
     align-items: center;
-    padding: 15px 20px;
+    padding: 8px 20px;
     background: white;
     border-radius: 10px;
-    margin: 0 20px 10px 20px;
+    margin: 0 20px 6px 20px;
 }
 
 .game-meta {
