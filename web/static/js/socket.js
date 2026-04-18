@@ -181,6 +181,11 @@ function connectWebSocket() {
                     }
                 }, 100);
                 break;
+            case 'undoStroke':
+                if (message.userId !== currentUserId) {
+                    drawingCanvas.undoLastStroke(true);
+                }
+                break;
         }
 
         if (message.type === 'draw' && drawingCanvas) {
@@ -216,10 +221,16 @@ function handleDrawEvent(data) {
         case 'start':
             drawingCanvas.ctx.strokeStyle = color;
             drawingCanvas.ctx.lineWidth = size;
+            drawingCanvas.strokes.push({
+                points: [],
+                color,
+                size,
+            });
             drawingCanvas.ctx.beginPath();
             drawingCanvas.ctx.moveTo(x, y);
             break;
         case 'draw':
+            drawingCanvas.strokes[drawingCanvas.strokes.length - 1].points.push({x, y});
             drawingCanvas.ctx.lineTo(x, y);
             drawingCanvas.ctx.stroke();
             break;

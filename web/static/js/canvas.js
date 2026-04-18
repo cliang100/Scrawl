@@ -8,6 +8,8 @@ class DrawingCanvas {
         
         this.setupCanvas();
         this.setupEventListeners();
+
+        this.strokes = [];
     }
     
     setupCanvas() {
@@ -52,6 +54,11 @@ class DrawingCanvas {
             return;
         }
 
+        this.strokes.push({
+            points: [],
+            color: this.currentColor,
+            size: this.currentSize
+        })
         this.isDrawing = true;
         const rect = this.canvas.getBoundingClientRect();
         const x = e.clientX - rect.left;
@@ -60,7 +67,8 @@ class DrawingCanvas {
         this.ctx.beginPath();
         this.ctx.moveTo(x, y);
         
-        // Send drawing start event
+        this.strokes[this.strokes.length - 1].points.push({x, y});
+
         this.sendDrawEvent('start', x, y);
     }
     
@@ -76,7 +84,8 @@ class DrawingCanvas {
         this.ctx.lineTo(x, y);
         this.ctx.stroke();
         
-        // Send drawing event
+        this.strokes[this.strokes.length - 1].points.push({x, y});
+
         this.sendDrawEvent('draw', x, y);
     }
     
@@ -113,6 +122,33 @@ class DrawingCanvas {
     
     setSize(size) {
         this.currentSize = size;
+    }
+
+    replayStrokes() {
+        this.strokes.forEach(stroke => {
+            this.ctx.strokeStyle = stroke.color;
+            this.ctx.lineWidth = stroke.size;
+            this.ctx.beginPath();
+            stroke.points.forEach((point, index) => {
+                if (index === 0) {
+                    this.ctx.moveTo(point.x, point.y);
+                } else {
+                    this.ctx.lineTo(point.x, point.y);
+                }
+            });
+            this.ctx.stroke();
+        });
+    }
+
+    undoLastStroke(skipBroadcast = false) {
+        if (this.strokes.length === 0) return; 
+        this.strokes.pop();
+        this.clearCanvas();
+        this.replayStrokes();
+
+        if (!skipBroadcast && ws && ws.readyState === WebSocket.OPEN) {
+            ws.send(JSON.stringify({ type: 'undoStroke', data: {} }));
+        }
     }
 }
 
@@ -182,6 +218,11 @@ window.addEventListener('load', () => {
         if (ws && ws.readyState === WebSocket.OPEN) {
             ws.send(JSON.stringify({ type: 'clearCanvas', data: {} }));
         }
+    });
+
+    // Undo last stroke button
+    document.getElementById('undoStroke').addEventListener('click', () => {
+        drawingCanvas.undoLastStroke();
     });
     
     // Close dropdown when clicking outside

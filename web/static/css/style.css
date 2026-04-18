@@ -558,6 +558,7 @@ canvas {
 
 /* Individual tool buttons in white boxes - larger, less rounded */
 .brush-trigger,
+.toolbar #undoStroke,
 .toolbar #clearCanvas {
     width: 64px;
     height: 64px;
@@ -575,9 +576,50 @@ canvas {
 }
 
 .brush-trigger:hover,
+.toolbar #undoStroke:hover,
 .toolbar #clearCanvas:hover {
     transform: translateY(-3px);
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* Push trash to right */
+.toolbar #clearCanvas {
+    margin-left: auto;
+}
+
+/* Undo icon - cartoony style with 1-2 animation */
+.undo-icon {
+    width: 32px;
+    height: 32px;
+    position: relative;
+    animation: crayonIdle 0.5s steps(1) infinite;
+}
+
+.undo-icon::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 0;
+    height: 0;
+    border-top: 10px solid transparent;
+    border-bottom: 10px solid transparent;
+    border-right: 14px solid #333;
+    margin-left: -6px;
+}
+
+.undo-icon::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 18px;
+    height: 6px;
+    background: #333;
+    margin-left: 4px;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.3);
 }
 
 /* Trash can icon - cartoony style */
