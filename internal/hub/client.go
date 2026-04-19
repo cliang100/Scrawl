@@ -128,15 +128,37 @@ func startWordSelectionTimer(hub *models.Hub, roomManager *models.RoomManager, r
 						room.CurrentDrawerID = room.TurnOrder[nextIdx]
 					}
 					roomManager.Unlock()
+					
+					room.TurnCount++
+					if room.TurnCount >= len(room.TurnOrder) {
+						room.Round++
+						room.TurnCount = 0
+					}
+
+					if room.Round > room.MaxRounds {
+						room.State = "finished"
+						hub.Broadcast <- models.Message{
+							Type: "gameOver",
+							Data: map[string]interface{}{
+								"message": "Game over!",
+								"scores":  room.Players,
+							},
+							RoomID: roomCode,
+						}
+						return
+					}
 
 					hub.Broadcast <- models.Message{
 						Type: "turnEnd",
 						Data: map[string]interface{}{
 							"timedOut":		true,
 							"nextDrawer":	room.CurrentDrawerID,
+							"round":		room.Round,
+							"maxRounds":	room.MaxRounds,
 						},
 						RoomID: roomCode,
 					}
+
 					startWordSelectionTimer(hub, roomManager, roomCode, room.CurrentDrawerID, words)
 					return
 				case <-drawCancelChan:
