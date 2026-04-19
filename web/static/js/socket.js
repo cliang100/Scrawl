@@ -104,9 +104,10 @@ function connectWebSocket() {
                 currentDrawerId = message.data.nextDrawerId;
                 currentWord = null;
 
-                // Clear canvas
+                // Clear canvas and stroke history
                 if (drawingCanvas) {
                     drawingCanvas.clearCanvas();
+                    drawingCanvas.strokes = [];
                     drawingCanvas.ctx.beginPath();
                 }
 
