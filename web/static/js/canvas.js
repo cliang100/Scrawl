@@ -287,7 +287,9 @@ window.addEventListener('load', () => {
             // Update brush icon size to match selection
             const brushIcon = document.querySelector('.brush-icon');
             if (brushIcon) {
-                brushIcon.setAttribute('data-size', size);
+                const displaySize = Math.max(8, size * 1.5);
+                brushIcon.style.width = displaySize + 'px';
+                brushIcon.style.height = displaySize + 'px';
             }
 
             // CLose dropdown
