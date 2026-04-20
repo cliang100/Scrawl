@@ -922,6 +922,8 @@ canvas {
     background: #f7f8fa;
     border-radius: 10px;
     margin-bottom: 10px;
+    max-height: 400px;
+    scroll-behavior: smooth;
 }
 
 .chat-input {
@@ -939,4 +941,41 @@ canvas {
     margin: 0;
     padding: 12px 20px;
     white-space: nowrap;
+}
+
+/* Chat message styling */
+.guess-message {
+    padding: 6px 0;
+    border-bottom: 1px solid #eee;
+}
+
+.guess-message:last-child {
+    border-bottom: none;
+}
+
+/* Winner chat - lighter text for correct guessers */
+.winner-chat {
+    color: #888;
+    font-style: italic;
+}
+
+/* System message - for "Player guessed correctly!" */
+.system-message {
+    color: #27ae60;
+    font-weight: 600;
+    font-style: italic;
+}
+
+/* Drawing message - blue for "Player is drawing now!" */
+.drawing-message {
+    color: #3498db;
+    font-weight: 600;
+    font-style: italic;
+}
+
+/* Timeout message - for "Time's up!" */
+.timeout-message {
+    color: #e74c3c;
+    font-weight: 600;
+    font-style: italic;
 }

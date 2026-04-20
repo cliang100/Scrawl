@@ -242,7 +242,10 @@ function updateGameUI() {
     if (isDrawer && currentWord) {
         if (canvas) canvas.style.pointerEvents = 'auto';
         if (tools) tools.style.display = 'flex';
-        if (guessInput) guessInput.style.display = 'none';
+        if (guessInput) {
+            guessInput.style.display = 'block';
+            guessInput.placeholder = 'Type your guess here...';
+        }
         showCurrentWord();
     } else if (isDrawer && !currentWord) {
         if (canvas) canvas.style.pointerEvents = 'none';
@@ -350,6 +353,12 @@ function handleGameStateUpdate(data) {
     turnOrder = data.turnOrder;
     currentPlayers = data.players;
     currentWord = data.currentWord;
+    
+    // Drawer is considered a "winner" for chat purposes
+    if (currentDrawerId === currentUserId && currentWord) {
+        isWinner = true;
+        console.log('Game state: Drawer set isWinner to true');
+    }
     
     // Update Rounds
     const roundDisplay = document.getElementById('roundDisplay');

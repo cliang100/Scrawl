@@ -48,6 +48,8 @@ type Room struct {
 	CancelTimer		chan struct{}
 	TimerGeneration int
 	TimerDeadline	time.Time
+	CorrectGuessers map[string]bool
+	ChatHistory		[]ChatMessage
 }
 
 type Player struct {
@@ -61,6 +63,15 @@ type Player struct {
 type RoomManager struct {
 	Rooms map[string]*Room
 	mu    sync.RWMutex
+}
+
+type ChatMessage struct {
+	UserID		 string		`json:"userId"`
+	UserName	 string		`json:"userName"`
+	Text		 string		`json:"text"`
+	IsCorrect	 bool		`json:"isCorrect"`
+	IsWinnerChat bool		`json:"isWinnerChat"`
+	Timestamp	 time.Time	`json:"timestamp"`
 }
 
 func (rm *RoomManager) CreateRoom(hostID, name, avatar string) *Room {
@@ -84,6 +95,8 @@ func (rm *RoomManager) CreateRoom(hostID, name, avatar string) *Room {
 		CurrentDrawerID: hostID,
 		TurnOrder:       []string{hostID},
 		Round:           1,
+		CorrectGuessers: make(map[string]bool),
+		ChatHistory:	 make([]ChatMessage, 0),
 	}
 
 	room.Players[hostID] = hostPlayer

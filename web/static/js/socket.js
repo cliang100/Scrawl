@@ -1,4 +1,5 @@
 let ws;
+let isWinner = false;
 
 function connectWebSocket() {
     const urlParams = new URLSearchParams(window.location.search);
@@ -55,11 +56,27 @@ function connectWebSocket() {
                 console.log('Processing gameStateUpdate:', message.data);
                 handleGameStateUpdate(message.data);
                 break;
+            case 'drawingNow':
+                console.log('Processing drawingNow:', message.data);
+                const drawingChatDiv = document.querySelector('.message-list');
+                if (drawingChatDiv) {
+                    const drawMsg = document.createElement('div');
+                    drawMsg.className = 'drawing-message';
+                    drawMsg.textContent = `${message.data.drawerName} is drawing now!`;
+                    drawingChatDiv.appendChild(drawMsg);
+                    drawingChatDiv.scrollTop = drawingChatDiv.scrollHeight;
+                }
+                break;
             case 'wordSelected':
                 console.log('Processing wordSelected:', message.data);
                 currentWord = message.data.word;
                 console.log('currentWord set to:', currentWord);
                 currentDrawerId = message.data.drawerID;
+                // Drawer is considered a "winner" for chat purposes
+                if (currentDrawerId === currentUserId) {
+                    isWinner = true;
+                    console.log('Drawer set isWinner to true');
+                }
                 hideWordSelection();
                 updateGameUI();
                 break;
@@ -93,7 +110,39 @@ function connectWebSocket() {
                 `;
                 break;
             case 'guess':
-                console.log('Processing guess:', message.data);
+                console.log('Processing guess:', message.data, 'local isWinner:', isWinner);
+
+                // Track local winner status
+                if (message.data.isCorrect && message.data.userId === currentUserId) {
+                    isWinner = true;
+                    console.log('Set isWinner to true for current user');
+                }
+
+                const chatDiv = document.querySelector('.message-list');
+                if (chatDiv) {
+                    const msgDiv = document.createElement('div');
+
+                    if (message.data.displayText) {
+                        msgDiv.textContent = message.data.displayText;
+                        msgDiv.className = 'guess-message system-message';
+                    } else if (message.data.guess) {
+                        msgDiv.textContent = message.data.userName + ': ' + message.data.guess;
+                        console.log('Message from:', message.data.userName, 'isWinnerChat:', message.data.isWinnerChat, 'local isWinner:', isWinner);
+                        if (message.data.isWinnerChat && isWinner) {
+                            msgDiv.className = 'guess-message winner-chat';
+                            console.log('Showing winner chat');
+                        } else if (!message.data.isWinnerChat) {
+                            msgDiv.className = 'guess-message';
+                        } else {
+                            // Skip winner chat from non-winners entirely
+                            console.log('Hiding winner chat from non-winner');
+                            msgDiv.style.display = 'none';
+                        }
+                    }
+
+                    chatDiv.appendChild(msgDiv);
+                    chatDiv.scrollTop = chatDiv.scrollHeight;
+                }
                 break;
             case 'gameError':
                 console.log('Processing gameError:', message.data);
@@ -101,6 +150,7 @@ function connectWebSocket() {
                 break;
             case 'turnEnd':
                 console.log('Processing turnEnd:', message.data);
+                isWinner = false;
                 currentDrawerId = message.data.nextDrawerId;
                 currentWord = null;
 
@@ -111,14 +161,17 @@ function connectWebSocket() {
                     drawingCanvas.ctx.beginPath();
                 }
 
-                // Show notification in chat
-                const notification = document.createElement('div');
-                notification.className = 'correct-guess-notification';
-                notification.textContent = message.data.timedOut
-                    ? `⏰ Time's up! No one guessed in time.`
-                    : `✅ ${message.data.guesserName} guessed correctly!`;
-                const chatDiv = document.querySelector('.message-list');
-                if (chatDiv) chatDiv.prepend(notification);
+                // Show timeout notification at bottom of chat only
+                if (message.data.timedOut) {
+                    const notification = document.createElement('div');
+                    notification.className = 'system-message timeout-message';
+                    notification.textContent = `⏰ Time's up! No one guessed in time.`;
+                    const turnEndChatDiv = document.querySelector('.message-list');
+                    if (turnEndChatDiv) {
+                        turnEndChatDiv.appendChild(notification);
+                        turnEndChatDiv.scrollTop = turnEndChatDiv.scrollHeight;
+                    }
+                }
 
                 updateGameUI();
 
