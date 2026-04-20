@@ -1,0 +1,266 @@
+/* ========== Game Elements ========== */
+
+/* Drawing Tools Container */
+.drawing-tools {
+    flex-shrink: 0;
+    margin-bottom: 10px;
+    padding: 10px;
+}
+
+.drawing-tools-container .drawing-tools {
+    margin: 0;
+    padding: 10px;
+}
+
+/* Turn Status */
+.turn-status {
+    flex-shrink: 0;
+    margin-bottom: 10px;
+    text-align: center;
+}
+
+#turnStatus {
+    font-weight: normal;
+    color: #666;
+}
+
+#wordDisplay {
+    color: #667eea;
+    font-weight: 700;
+    margin: 15px 0;
+    font-size: 1.2em;
+    min-height: 30px;
+}
+
+/* Canvas Specific */
+canvas {
+    border: 3px solid #e1e5e9;
+    background-color: white;
+    border-radius: 15px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    margin: 20px 0;
+    cursor: crosshair;
+}
+
+canvas:disabled {
+    cursor: not-allowed;
+    opacity: 0.7;
+}
+
+/* Timer Circle */
+.timer-circle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
+    color: white;
+    font-weight: 700;
+    font-size: 1.2em;
+    box-shadow: 0 4px 12px rgba(255, 107, 107, 0.4);
+}
+
+/* Game Player List (Left Sidebar) */
+#gamePlayerList {
+    list-style: none;
+    padding: 0;
+    margin: 10px 0 0 0;
+}
+
+#gamePlayerList li {
+    padding: 8px 12px;
+    margin: 5px 0;
+    background: white;
+    border-radius: 8px;
+    font-weight: 500;
+    color: #333;
+    border: 1px solid #e1e5e9;
+    transition: all 0.2s ease;
+}
+
+#gamePlayerList li.current-drawer {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border-color: #667eea;
+}
+
+/* Word Selection */
+.word-selection h4 {
+    margin: 0 0 15px 0;
+    color: #333;
+}
+
+.word-options {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.word-btn {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border: none;
+    padding: 12px 20px;
+    border-radius: 10px;
+    font-size: 1em;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+}
+
+.word-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+}
+
+.word-btn:active {
+    transform: translateY(0);
+}
+
+/* Guessing Info */
+.guessing-info {
+    text-align: center;
+}
+
+.guessing-info h4 {
+    color: #667eea;
+    margin: 0 0 10px 0;
+}
+
+.guessing-info p {
+    color: #666;
+    margin: 0 0 15px 0;
+}
+
+.word-hint {
+    font-size: 1.5em;
+    font-weight: 600;
+    color: #333;
+    letter-spacing: 0.2em;
+    background: #f8f9fa;
+    padding: 15px;
+    border-radius: 10px;
+    border: 2px dashed #667eea;
+}
+
+/* Word Selection Overlay */
+.word-selection-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.8);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.word-selection-modal {
+    background: white;
+    padding: 30px;
+    border-radius: 15px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    text-align: center;
+    max-width: 400px;
+}
+
+.word-selection-modal h3 {
+    margin: 0 0 20px 0;
+    color: #333;
+    font-size: 1.5em;
+}
+
+.word-selection-modal .word-options {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 15px;
+    margin: 20px 0;
+}
+
+/* Game Over Overlay */
+.game-over-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.8);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.game-over-modal {
+    background: white;
+    padding: 30px;
+    border-radius: 15px;
+    text-align: center;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+}
+
+/* Guess Input */
+#guessInput {
+    width: 300px;
+    padding: 12px 16px;
+    border: 2px solid #e1e5e9;
+    border-radius: 10px;
+    font-size: 16px;
+    outline: none;
+    transition: border-color 0.3s ease;
+}
+
+#guessInput:focus {
+    border-color: #667eea;
+}
+
+/* Old Drawing Tools (Remove button styles) */
+#clearCanvas {
+    background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+#clearCanvas:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(255, 107, 107, 0.4);
+}
+
+.tool-group {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: white;
+    padding: 10px 15px;
+    border-radius: 10px;
+    border: 1px solid #e1e5e9;
+}
+
+.tool-group label {
+    font-weight: 600;
+    color: #333;
+    font-size: 14px;
+}
+
+#brushSize {
+    width: 120px;
+}
+
+#colorPicker {
+    width: 50px;
+    height: 35px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}

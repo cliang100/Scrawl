@@ -1,0 +1,206 @@
+/* ========== Drawing Toolbar ========== */
+
+.toolbar {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    background: transparent;
+    padding: 0;
+    flex-wrap: nowrap;
+    justify-content: center;
+}
+
+/* Color Palette */
+.color-palette {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.color-row {
+    display: flex;
+    gap: 4px;
+}
+
+.color-option {
+    width: 28px;
+    height: 28px;
+    border-radius: 3px;
+    cursor: pointer;
+    border: 2px solid transparent;
+    transition: all 0.15s ease;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+.color-option:hover {
+    transform: scale(1.15);
+    border-color: #333;
+    z-index: 10;
+}
+
+.color-option.selected {
+    border-color: #333;
+    transform: scale(1.1);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+}
+
+/* Tool Buttons (White Boxes) */
+.brush-trigger,
+.toolbar #penTool,
+.toolbar #fillTool,
+.toolbar #undoStroke,
+.toolbar #clearCanvas {
+    width: 64px;
+    height: 64px;
+    border-radius: 4px;
+    border: 1px solid #e1e5e9;
+    background: white;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    transition: all 0.2s ease;
+    padding: 4px;
+    overflow: hidden;
+}
+
+/* Button Hover */
+.brush-trigger:hover,
+.toolbar #penTool:hover,
+.toolbar #fillTool:hover,
+.toolbar #undoStroke:hover,
+.toolbar #clearCanvas:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    transform: none;
+    background: #f0f0f0;
+}
+
+/* Icon Lift Effect */
+.brush-icon {
+    transition: transform 0.3s ease;
+}
+
+/* Tool Images - Start Grayed Out */
+.toolbar #penTool img,
+.toolbar #fillTool img,
+.toolbar #undoStroke img,
+.toolbar #clearCanvas img {
+    transition: transform 0.3s ease, filter 0.3s ease;
+    filter: grayscale(100%);
+    width: 48px;
+    height: 48px;
+    object-fit: contain;
+    pointer-events: none;
+}
+
+/* Icon Hover: Lift & Color */
+.brush-trigger:hover .brush-icon,
+.toolbar #penTool:hover img,
+.toolbar #fillTool:hover img,
+.toolbar #undoStroke:hover img,
+.toolbar #clearCanvas:hover img {
+    transform: translateY(-3px);
+}
+
+.toolbar #penTool:hover img,
+.toolbar #fillTool:hover img,
+.toolbar #undoStroke:hover img,
+.toolbar #clearCanvas:hover img {
+    filter: grayscale(0%);
+}
+
+/* Selected Tools */
+.toolbar #penTool.selected img,
+.toolbar #fillTool.selected img {
+    filter: grayscale(0%);
+}
+
+.toolbar #penTool.selected,
+.toolbar #fillTool.selected {
+    border-color: #333;
+    box-shadow: 0 0 0 2px #333, 0 4px 12px rgba(0, 0, 0, 0.15);
+    background: #c4b5fd;
+}
+
+/* Push Trash to Right */
+.toolbar #clearCanvas {
+    margin-left: auto;
+}
+
+/* Brush Size Picker */
+.brush-picker {
+    position: relative;
+}
+
+/* Brush Options Dropdown */
+.brush-options {
+    position: absolute;
+    bottom: calc(100% + 10px);
+    left: 50%;
+    transform: translateX(-50%) scale(0);
+    background: white;
+    border-radius: 12px;
+    padding: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.15);
+    border: 1px solid #e1e5e9;
+    opacity: 0;
+    transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+    pointer-events: none;
+    z-index: 100;
+}
+
+.brush-options.open {
+    transform: translateX(-50%) scale(1);
+    opacity: 1;
+    pointer-events: auto;
+}
+
+/* Brush Option Items */
+.brush-option {
+    width: 44px;
+    height: 44px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border: 1px solid #e1e5e9;
+    background: white;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+}
+
+.brush-option:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.12);
+    border-color: #667eea;
+}
+
+.brush-option.selected {
+    background: #c4b5fd;
+    border-color: #333;
+}
+
+.brush-option.selected .brush-preview {
+    background: #000;
+}
+
+/* Brush Preview Circles */
+.brush-preview {
+    background: #000;
+    border-radius: 50%;
+    transition: all 0.2s ease;
+}
+
+/* Brush Trigger Icon (Current Size) */
+.brush-icon {
+    display: block;
+    background: #000;
+    border-radius: 50%;
+    width: 14px;
+    height: 14px;
+}
