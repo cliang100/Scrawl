@@ -15,7 +15,7 @@ function connectWebSocket() {
         ws = new WebSocket(`${protocol}//${window.location.host}/ws`);
     }
 
-    ws.onopen = function(event) {
+    ws.onopen = function() {
         console.log('WebSocket connected, currentUserId set to:', currentUserId);
     };
 
@@ -148,6 +148,15 @@ function connectWebSocket() {
                 console.log('Processing gameError:', message.data);
                 alert(message.data.error);
                 break;
+            case 'fill':
+                if (message.userId !== currentUserId && drawingCanvas) {
+                    drawingCanvas.floodFill(
+                        message.data.x,
+                        message.data.y,
+                        message.data.color
+                    );
+                }
+                break;
             case 'turnEnd':
                 console.log('Processing turnEnd:', message.data);
                 isWinner = false;
@@ -264,7 +273,16 @@ function connectWebSocket() {
             }, 2000);
         }
     };
-}   
+}
+
+function sendFill(x, y, color) {
+    if (ws && ws.readyState === WebSocket.OPEN) {
+        ws.send(JSON.stringify({
+            type: 'fill',
+            data: { x, y, color }
+        }));
+    }
+}
 
 window.addEventListener('load', connectWebSocket);
 

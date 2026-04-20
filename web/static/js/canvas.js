@@ -3,6 +3,7 @@ class DrawingCanvas {
         this.canvas = document.getElementById(canvasId);
         this.ctx = this.canvas.getContext('2d');
         this.isDrawing = false;
+        this.currentTool = 'pen';
         this.currentColor = '#000000';
         this.currentSize = 2;
         
@@ -54,19 +55,26 @@ class DrawingCanvas {
             return;
         }
 
+        const rect = this.canvas.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const y = e.clientY - rect.top;
+
+        if (this.currentTool === 'fill') {
+            this.floodFill(x, y, this.currentColor);
+            sendFill(x, y, this.currentColor);
+            return;
+        }
+
         this.strokes.push({
             points: [],
             color: this.currentColor,
             size: this.currentSize
         })
         this.isDrawing = true;
-        const rect = this.canvas.getBoundingClientRect();
-        const x = e.clientX - rect.left;
-        const y = e.clientY - rect.top;
-        
+
         this.ctx.beginPath();
         this.ctx.moveTo(x, y);
-        
+
         this.strokes[this.strokes.length - 1].points.push({x, y});
 
         this.sendDrawEvent('start', x, y);
@@ -124,6 +132,10 @@ class DrawingCanvas {
         this.currentSize = size;
     }
 
+    setTool(tool) {
+        this.currentTool = tool;
+    }
+
     replayStrokes() {
         this.strokes.forEach(stroke => {
             this.ctx.strokeStyle = stroke.color;
@@ -149,6 +161,77 @@ class DrawingCanvas {
         if (!skipBroadcast && ws && ws.readyState === WebSocket.OPEN) {
             ws.send(JSON.stringify({ type: 'undoStroke', data: {} }));
         }
+    }
+
+    floodFill(startX, startY, fillColor) {
+        const imageData = this.ctx.getImageData(0, 0, this.canvas.width, this.canvas.height);
+        const data = imageData.data;
+        const width = this.canvas.width;
+        const height = this.canvas.height;
+
+        const startIdx = (Math.floor(startY) * width + Math.floor(startX)) * 4;
+        const targetR = data[startIdx];
+        const targetG = data[startIdx + 1];
+        const targetB = data[startIdx + 2];
+        const targetA = data[startIdx + 3];
+
+        const fillRgb = this.hexToRgb(fillColor);
+        if (!fillRgb) return;
+
+        if (targetR === fillRgb.r && targetG === fillRgb.g &&
+            targetB === fillRgb.b && targetA === 255) {
+            return;
+        }
+
+        const stack = [[Math.floor(startX), Math.floor(startY)]];
+        const tolerance = 32;
+
+        while (stack.length > 0) {
+            const [x, y] = stack.pop();
+
+            if (x < 0 || x >= width || y < 0 || y >= height) continue;
+
+            const idx = (y * width + x) * 4;
+            const r = data[idx], g = data[idx + 1],
+                  b = data[idx + 2], a = data[idx + 3];
+
+            if (Math.abs(r - targetR) > tolerance ||
+                Math.abs(g - targetG) > tolerance ||
+                Math.abs(b - targetB) > tolerance ||
+                Math.abs(a - targetA) > tolerance) {
+                continue;
+            }
+
+            if (r === fillRgb.r && g === fillRgb.g &&
+                b === fillRgb.b && a === 255) {
+                continue;
+            }
+
+            data[idx] = fillRgb.r;
+            data[idx + 1] = fillRgb.g;
+            data[idx + 2] = fillRgb.b;
+            data[idx + 3] = 255;
+
+            stack.push([x + 1, y], [x - 1, y], [x, y + 1], [x, y - 1]);
+        }
+
+        this.ctx.putImageData(imageData, 0, 0);
+
+        this.strokes.push({
+            type: 'fill',
+            x: startX,
+            y: startY,
+            color: fillColor
+        });
+    }
+
+    hexToRgb(hex) {
+        const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+        return result ? {
+            r: parseInt(result[1], 16),
+            g: parseInt(result[2], 16),
+            b: parseInt(result[3], 16)
+        } : null;
     }
 }
 
@@ -224,6 +307,26 @@ window.addEventListener('load', () => {
     document.getElementById('undoStroke').addEventListener('click', () => {
         drawingCanvas.undoLastStroke();
     });
+
+    // Fill tool button
+    const fillToolBtn = document.getElementById('fillTool');
+    if (fillToolBtn) {
+        fillToolBtn.addEventListener('click', () => {
+            drawingCanvas.setTool('fill');
+            document.querySelectorAll('.tool-btn').forEach(btn => btn.classList.remove('selected'));
+            fillToolBtn.classList.add('selected');
+        });
+    }
+
+    // Pen tool (default)
+    const penToolBtn = document.getElementById('penTool') || document.querySelector('.pen-tool');
+    if (penToolBtn) {
+        penToolBtn.addEventListener('click', () => {
+            drawingCanvas.setTool('pen');
+            document.querySelectorAll('.tool-btn').forEach(btn => btn.classList.remove('selected'));
+            penToolBtn.classList.add('selected');
+        });
+    }
     
     // Close dropdown when clicking outside
     document.addEventListener('click', () => {

@@ -560,6 +560,8 @@ canvas {
 
 /* Individual tool buttons in white boxes - larger, less rounded */
 .brush-trigger,
+.toolbar #penTool,
+.toolbar #fillTool,
 .toolbar #undoStroke,
 .toolbar #clearCanvas {
     width: 64px;
@@ -578,10 +580,19 @@ canvas {
 }
 
 .brush-trigger:hover,
+.toolbar #penTool:hover,
+.toolbar #fillTool:hover,
 .toolbar #undoStroke:hover,
 .toolbar #clearCanvas:hover {
     transform: translateY(-3px);
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* Selected tool state */
+.toolbar #penTool.selected,
+.toolbar #fillTool.selected {
+    border-color: #333;
+    box-shadow: 0 0 0 2px #333, 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
 /* Push trash to right */
@@ -622,6 +633,130 @@ canvas {
     background: #333;
     margin-left: 4px;
     box-shadow: 0 1px 2px rgba(0,0,0,0.3);
+}
+
+/* Fill/Paint bucket icon - simple bucket with orange paint on top */
+.fill-icon {
+    width: 32px;
+    height: 32px;
+    position: relative;
+    animation: crayonIdle 0.5s steps(1) infinite;
+    display: block;
+}
+
+/* Bucket body - upright */
+.fill-icon::before {
+    content: '';
+    position: absolute;
+    top: 8px;
+    left: 6px;
+    width: 20px;
+    height: 18px;
+    background: #777;
+    border-radius: 2px 2px 6px 6px;
+    box-shadow: inset -2px -2px 0 rgba(0,0,0,0.2);
+}
+
+/* Orange paint on top of bucket */
+.fill-icon::after {
+    content: '';
+    position: absolute;
+    top: 6px;
+    left: 7px;
+    width: 18px;
+    height: 5px;
+    background: #ff8c00;
+    border-radius: 2px;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.2);
+}
+
+/* Pen/pencil icon - simple upright pencil */
+.pen-icon {
+    width: 32px;
+    height: 32px;
+    position: relative;
+    animation: crayonIdle 0.5s steps(1) infinite;
+    display: block;
+}
+
+/* Pencil body - upright */
+.pen-icon::before {
+    content: '';
+    position: absolute;
+    top: 6px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 10px;
+    height: 20px;
+    background: #f5c542;
+    border-radius: 1px;
+}
+
+/* Pencil lines */
+.pen-icon .pencil-lines {
+    position: absolute;
+    top: 8px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 6px;
+    height: 16px;
+    background: repeating-linear-gradient(
+        0deg,
+        transparent,
+        transparent 3px,
+        rgba(0,0,0,0.12) 3px,
+        rgba(0,0,0,0.12) 4px
+    );
+}
+
+/* Pencil wood tip - pointing down */
+.pen-icon::after {
+    content: '';
+    position: absolute;
+    bottom: 4px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 0;
+    height: 0;
+    border-left: 5px solid transparent;
+    border-right: 5px solid transparent;
+    border-top: 6px solid #f5c542;
+}
+
+/* Pencil lead - at the tip */
+.pen-icon .pencil-lead {
+    position: absolute;
+    bottom: 2px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 0;
+    height: 0;
+    border-left: 3px solid transparent;
+    border-right: 3px solid transparent;
+    border-top: 4px solid #333;
+}
+
+/* Eraser - at the top */
+.pen-icon .eraser {
+    position: absolute;
+    top: 2px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 10px;
+    height: 4px;
+    background: #d4a5a5;
+    border-radius: 2px 2px 0 0;
+}
+
+.pen-icon .eraser::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 10px;
+    height: 1px;
+    background: #c08e8e;
 }
 
 /* Trash can icon - cartoony style */
