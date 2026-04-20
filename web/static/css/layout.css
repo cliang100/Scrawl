@@ -3,7 +3,7 @@
 /* Game Layout Grid */
 .game-layout {
     display: grid;
-    grid-template-columns: 220px 1fr 320px;
+    grid-template-columns: 280px 1fr 320px;
     gap: 20px;
     padding: 20px;
     flex: 1;

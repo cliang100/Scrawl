@@ -62,28 +62,114 @@ canvas:disabled {
     box-shadow: 0 4px 12px rgba(255, 107, 107, 0.4);
 }
 
-/* Game Player List (Left Sidebar) */
+/* Game Player List - Excel-style boxed layout */
 #gamePlayerList {
-    list-style: none;
-    padding: 0;
-    margin: 10px 0 0 0;
+    display: flex;
+    flex-direction: column;
+    border: 1px solid #d0d0d0;
+    border-radius: 4px;
+    overflow: hidden;
 }
 
-#gamePlayerList li {
-    padding: 8px 12px;
-    margin: 5px 0;
+.player-box {
+    display: grid;
+    grid-template-columns: 35px minmax(0, 1fr) 50px;
+    grid-template-rows: auto auto;
+    grid-template-areas:
+        "rank info avatar"
+        "host info avatar";
+    padding: 12px 16px;
     background: white;
-    border-radius: 8px;
-    font-weight: 500;
-    color: #333;
-    border: 1px solid #e1e5e9;
+    border-bottom: 1px solid #d0d0d0;
     transition: all 0.2s ease;
+    min-height: 80px;
+    align-items: center;
 }
 
-#gamePlayerList li.current-drawer {
+.player-box:last-child {
+    border-bottom: none;
+}
+
+/* Alternating row colors */
+.player-box.alt-row {
+    background: #f5f5f5;
+}
+
+/* Current drawer highlight */
+.player-box.current-drawer {
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     color: white;
-    border-color: #667eea;
+}
+
+.player-box.current-drawer .player-rank,
+.player-box.current-drawer .player-name,
+.player-box.current-drawer .player-score,
+.player-box.current-drawer .you-tag {
+    color: white;
+}
+
+/* Rank - top left */
+.player-rank {
+    grid-area: rank;
+    font-size: 1.1em;
+    font-weight: 700;
+    color: #667eea;
+    align-self: start;
+    justify-self: start;
+}
+
+/* Host crown - bottom left */
+.player-host {
+    grid-area: host;
+    font-size: 1.2em;
+    align-self: end;
+    justify-self: start;
+}
+
+.player-host-placeholder {
+    grid-area: host;
+    align-self: end;
+    justify-self: start;
+    width: 1.2em;
+}
+
+/* Player info - middle */
+.player-info {
+    grid-area: info;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+}
+
+.player-name {
+    font-weight: 600;
+    font-size: 1em;
+    color: #333;
+    margin-bottom: 4px;
+}
+
+.you-tag {
+    color: #667eea;
+    font-weight: 700;
+}
+
+.player-score {
+    font-size: 0.9em;
+    color: #666;
+    font-weight: 500;
+    white-space: nowrap;
+}
+
+/* Avatar - right side */
+.player-avatar {
+    grid-area: avatar;
+    font-size: 2.5em;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
 }
 
 /* Word Selection */

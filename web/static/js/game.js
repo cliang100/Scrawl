@@ -263,15 +263,50 @@ function updateGamePlayerList() {
     const playerListElement = document.getElementById('gamePlayerList');
     if (playerListElement && currentPlayers) {
         playerListElement.innerHTML = '';
-        Object.values(currentPlayers).forEach(player => {
-            const li = document.createElement('li');
+        
+        // Sort players by score (descending) for ranking
+        const sortedPlayers = Object.values(currentPlayers).sort((a, b) => (b.score || 0) - (a.score || 0));
+        
+        let currentRank = 1;
+        let previousScore = null;
+        
+        sortedPlayers.forEach((player, index) => {
+            const playerBox = document.createElement('div');
+            playerBox.className = 'player-box';
+            
             const avatar = player.avatar || '👤';
             const name = player.name || 'Player';
             const isCurrentDrawer = player.id === currentDrawerId;
+            const isYou = player.id === currentUserId;
+            const score = player.score || 0;
             
-            li.className = isCurrentDrawer ? 'current-drawer' : '';
-            li.innerHTML = `${avatar} ${name} (${player.score || 0})${player.isHost ? ' (Host)' : ''}${isCurrentDrawer ? ' ✏️' : ''}`;
-            playerListElement.appendChild(li);
+            // Handle tied rankings - if score differs from previous, update rank
+            if (previousScore !== null && score !== previousScore) {
+                currentRank = index + 1;
+            }
+            previousScore = score;
+            
+            // Add alternating background class
+            if (index % 2 === 1) {
+                playerBox.classList.add('alt-row');
+            }
+            
+            // Add current drawer highlight
+            if (isCurrentDrawer) {
+                playerBox.classList.add('current-drawer');
+            }
+            
+            playerBox.innerHTML = `
+                <div class="player-rank">#${currentRank}</div>
+                ${player.isHost ? '<div class="player-host">👑</div>' : '<div class="player-host-placeholder"></div>'}
+                <div class="player-info">
+                    <div class="player-name">${name}${isYou ? ' <span class="you-tag">(You)</span>' : ''}${isCurrentDrawer ? ' ✏️' : ''}</div>
+                    <div class="player-score">${score} points</div>
+                </div>
+                <div class="player-avatar">${avatar}</div>
+            `;
+            
+            playerListElement.appendChild(playerBox);
         });
     }
 }
