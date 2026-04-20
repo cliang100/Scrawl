@@ -234,14 +234,14 @@ function updateGameUI() {
     
     // Show/hide drawing controls based on who's drawing
     const canvas = document.getElementById('drawingCanvas');
-    const tools = document.querySelector('.drawing-tools');
+    const tools = document.querySelector('.toolbar');
     const guessInput = document.getElementById('guessInput');
     
     console.log('Drawing permissions check:', { isDrawer, currentUserId, currentDrawerId });
     
     if (isDrawer && currentWord) {
         if (canvas) canvas.style.pointerEvents = 'auto';
-        if (tools) tools.style.display = 'block';
+        if (tools) tools.style.display = 'flex';
         if (guessInput) guessInput.style.display = 'none';
         showCurrentWord();
     } else if (isDrawer && !currentWord) {

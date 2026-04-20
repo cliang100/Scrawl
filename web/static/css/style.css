@@ -520,6 +520,8 @@ canvas {
     align-items: center;
     background: transparent;
     padding: 0;
+    flex-wrap: nowrap;
+    justify-content: center;
 }
 
 /* Color palette - 2 rows of 13 colors */
