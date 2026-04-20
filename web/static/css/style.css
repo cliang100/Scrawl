@@ -595,6 +595,24 @@ canvas {
     box-shadow: 0 0 0 2px #333, 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
+/* Tool buttons with images - use flexbox for centering */
+.toolbar #penTool,
+.toolbar #fillTool {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+}
+
+/* Tool button images - fill the button */
+.toolbar #penTool img,
+.toolbar #fillTool img {
+    width: 56px;
+    height: 56px;
+    object-fit: contain;
+    pointer-events: none;
+}
+
 /* Push trash to right */
 .toolbar #clearCanvas {
     margin-left: auto;
