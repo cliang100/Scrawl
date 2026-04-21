@@ -222,16 +222,6 @@ function updateGameUI() {
     // Update player list
     updateGamePlayerList();
     
-    // Update turn status
-    const turnStatus = document.getElementById('turnStatus');
-    if (turnStatus) {
-        const currentPlayer = turnOrder.find(id => id === currentDrawerId);
-        const playerName = currentPlayer ? getPlayerName(currentPlayer) : 'Someone';
-        const statusText = isDrawer ? 'You are drawing' : `${playerName} is drawing...`;
-        turnStatus.textContent = statusText;
-        console.log('Turn status update:', { isDrawer, currentDrawerId, currentUserId, statusText });
-    }
-    
     // Show/hide drawing controls based on who's drawing
     const canvas = document.getElementById('drawingCanvas');
     const tools = document.querySelector('.toolbar');
@@ -246,15 +236,17 @@ function updateGameUI() {
             guessInput.style.display = 'block';
             guessInput.placeholder = 'Type your guess here...';
         }
-        showCurrentWord();
+        showWordDisplay('drawer', currentWord);
     } else if (isDrawer && !currentWord) {
         if (canvas) canvas.style.pointerEvents = 'none';
         if (tools) tools.style.display = 'none';
+        showWordDisplay('waiting');
         showGuessingUI();
     } else {
         if (canvas) canvas.style.pointerEvents = 'none';
         if (tools) tools.style.display = 'none';
         if (guessInput) guessInput.style.display = 'block';
+        showWordDisplay('guesser', currentWord || '');
         showGuessingUI();
     }
 }
@@ -363,23 +355,41 @@ function startCountdown(duration) {
 }
 
 // Guesser
-function showGuessingUI() {
-    const turnStatus = document.getElementById('turnStatus');
+function showWordDisplay(type, word = '') {
     const wordDisplay = document.getElementById('wordDisplay');
-    if (turnStatus && wordDisplay) {
-        const currentPlayer = turnOrder.find(id => id === currentDrawerId);
-        const playerName = currentPlayer ? getPlayerName(currentPlayer) : 'Someone';
-        turnStatus.textContent = `${playerName} is drawing...`;
-        wordDisplay.textContent = '';
+    if (!wordDisplay) return;
+    
+    const wordLabel = wordDisplay.querySelector('.word-label');
+    const wordContent = wordDisplay.querySelector('.word-content');
+    const letterCount = wordDisplay.querySelector('.letter-count');
+    
+    wordDisplay.classList.remove('waiting');
+    
+    if (type === 'drawer') {
+        wordLabel.textContent = 'DRAW THIS';
+        wordContent.textContent = word.toLowerCase();
+        letterCount.style.display = 'none';
+    } else if (type === 'guesser') {
+        wordLabel.textContent = 'GUESS THIS';
+        const underscores = '_ '.repeat(word.length).trim();
+        wordContent.textContent = underscores;
+        letterCount.style.display = 'inline-block';
+        letterCount.textContent = word.length.toString();
+    } else if (type === 'waiting') {
+        wordDisplay.classList.add('waiting');
+        wordLabel.textContent = '';
+        wordContent.textContent = 'WAITING';
+        letterCount.style.display = 'none';
     }
 }
 
-// Drawer
+function showGuessingUI() {
+    // Word display now handles all drawer/guesser indication
+    // No need for separate turnStatus text
+}
+
 function showCurrentWord() {
-    const wordDisplay = document.getElementById('wordDisplay');
-    if (wordDisplay) {
-        wordDisplay.textContent = currentWord;
-    }
+    // Handled by showWordDisplay
 }
 
 function handleGameStateUpdate(data) {
