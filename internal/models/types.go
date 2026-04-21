@@ -50,6 +50,8 @@ type Room struct {
 	TimerDeadline	time.Time
 	CorrectGuessers map[string]bool
 	ChatHistory		[]ChatMessage
+	RevealedIndices map[int]bool
+	HintCount		int
 }
 
 type Player struct {

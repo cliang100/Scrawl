@@ -31,6 +31,7 @@ class DrawingCanvas {
             ws.send(JSON.stringify({
                 type: 'stroke',
                 data: {
+                    strokeId: this.currentStrokeId,
                     points: [...this.strokeBuffer],
                     color: this.currentColor,
                     size: this.currentSize
@@ -122,7 +123,8 @@ class DrawingCanvas {
             points: [],
             color: this.currentColor,
             size: this.currentSize
-        })
+        });
+        this.currentStrokeId = crypto.randomUUID();
         this.isDrawing = true;
 
         this.ctx.beginPath();
@@ -192,29 +194,32 @@ class DrawingCanvas {
         this.currentTool = tool;
     }
 
-    replayStrokes() {
-        this.strokes.forEach(stroke => {
-            // Skip fill strokes (they have no points)
-            if (stroke.type === 'fill' || !stroke.points) return;
-            
-            this.ctx.strokeStyle = stroke.color;
-            this.ctx.lineWidth = stroke.size;
-            this.ctx.beginPath();
-            stroke.points.forEach((point, index) => {
-                if (index === 0) {
-                    this.ctx.moveTo(point.x, point.y);
-                } else {
-                    this.ctx.lineTo(point.x, point.y);
-                }
-            });
-            this.ctx.stroke();
+replayStrokes() {
+    this.strokes.forEach(stroke => {
+        if (stroke.type === 'fill' || !stroke.points) return;
+
+        this.ctx.strokeStyle = stroke.color;
+        this.ctx.lineWidth = stroke.size;
+        this.ctx.lineCap = 'round';
+        this.ctx.lineJoin = 'round';
+        this.ctx.beginPath();
+        stroke.points.forEach((point, index) => {
+            if (index === 0) {
+                this.ctx.moveTo(point.x, point.y);
+            } else {
+                this.ctx.lineTo(point.x, point.y);
+            }
         });
-    }
+        this.ctx.stroke();
+    });
+}
 
     undoLastStroke(skipBroadcast = false) {
-        if (this.strokes.length === 0) return; 
+        if (this.strokes.length === 0) return;
         this.strokes.pop();
-        this.clearCanvas();
+        // Manually clear canvas without wiping strokes array
+        this.ctx.fillStyle = '#ffffff';
+        this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
         this.replayStrokes();
 
         if (!skipBroadcast && ws && ws.readyState === WebSocket.OPEN) {

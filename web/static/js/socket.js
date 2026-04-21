@@ -69,7 +69,10 @@ function connectWebSocket() {
                 break;
             case 'wordSelected':
                 console.log('Processing wordSelected:', message.data);
-                currentWord = message.data.word;
+                // Only update currentWord if word is provided (drawer gets direct message with word)
+                if (message.data.word) {
+                    currentWord = message.data.word;
+                }
                 console.log('currentWord set to:', currentWord);
                 currentDrawerId = message.data.drawerID;
                 // Drawer is considered a "winner" for chat purposes
@@ -77,6 +80,8 @@ function connectWebSocket() {
                     isWinner = true;
                     console.log('Drawer set isWinner to true');
                 }
+                wordLength = message.data.word ? message.data.word.length : message.data.wordLength;
+                revealedLetters = [];
                 hideWordSelection();
                 updateGameUI();
                 break;
@@ -249,6 +254,9 @@ function connectWebSocket() {
                     drawingCanvas.undoLastStroke(true);
                 }
                 break;
+            case 'hint':
+                handleHint(message.data);
+                break;
         }
 
         if (message.type === 'draw' && drawingCanvas) {
@@ -260,32 +268,39 @@ function connectWebSocket() {
 
         if (message.type === 'stroke' && drawingCanvas) {
             if (message.userId !== currentUserId) {
-                handleStrokeEvent(message.data);
+                handleStrokeEvent(message.data, message.userId);
             }
         }
     };
 
-    function handleStrokeEvent(data) {
-        const { points, color, size } = data;
+    let lastStrokePoint = null;
+    let lastStrokeId = null;
+
+    function handleStrokeEvent(data, userId) {
+        const { strokeId, points, color, size } = data;
         if (!points || points.length === 0) return;
+
+        const isNewStroke = strokeId !== lastStrokeId;
+        lastStrokeId = strokeId;
+
+        if (isNewStroke) {
+            drawingCanvas.strokes.push({ points: [], color, size });
+            drawingCanvas.ctx.beginPath();
+            drawingCanvas.ctx.moveTo(points[0].x, points[0].y);
+        } else {
+            drawingCanvas.ctx.moveTo(lastStrokePoint.x, lastStrokePoint.y);
+        }
 
         drawingCanvas.ctx.strokeStyle = color;
         drawingCanvas.ctx.lineWidth = size;
         drawingCanvas.ctx.lineCap = 'round';
         drawingCanvas.ctx.lineJoin = 'round';
-        drawingCanvas.ctx.beginPath();
-        drawingCanvas.ctx.moveTo(points[0].x, points[0].y);
 
-        for (let i = 1; i < points.length; i++) {
-            drawingCanvas.ctx.lineTo(points[i].x, points[i].y);
-        }
-
+        points.forEach(p => drawingCanvas.ctx.lineTo(p.x, p.y));
         drawingCanvas.ctx.stroke();
-        drawingCanvas.strokes.push({
-            points: points,
-            color,
-            size,
-        });
+
+        drawingCanvas.strokes[drawingCanvas.strokes.length - 1].points.push(...points);
+        lastStrokePoint = points[points.length - 1];
     }
 
     ws.onerror = function(error) {
@@ -315,25 +330,30 @@ function sendFill(x, y, color) {
 
 window.addEventListener('load', connectWebSocket);
 
+function handleHint(data) {
+    const { index, letter } = data;
+    revealedLetters[index] = letter;
+    updateWordDisplay();
+}
+
 function handleDrawEvent(data) {
     const { action, x, y, color, size } = data;
 
     switch (action) {
         case 'start':
+            lastStrokePoint = null; // Reset to prevent connecting to previous stroke
             drawingCanvas.ctx.strokeStyle = color;
             drawingCanvas.ctx.lineWidth = size;
             drawingCanvas.ctx.lineCap = 'round';
             drawingCanvas.ctx.lineJoin = 'round';
-            drawingCanvas.strokes.push({
-                points: [],
-                color,
-                size,
-            });
+            // Don't add to strokes array here - stroke batches will add it
             drawingCanvas.ctx.beginPath();
             drawingCanvas.ctx.moveTo(x, y);
             break;
         case 'draw':
-            drawingCanvas.strokes[drawingCanvas.strokes.length - 1].points.push({x, y});
+            if (drawingCanvas.strokes.length > 0) {
+                drawingCanvas.strokes[drawingCanvas.strokes.length - 1].points.push({x, y});
+            }
             drawingCanvas.ctx.lineTo(x, y);
             drawingCanvas.ctx.stroke();
             break;

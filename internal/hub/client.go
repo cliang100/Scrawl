@@ -87,11 +87,31 @@ func startWordSelectionTimer(hub *models.Hub, roomManager *models.RoomManager, r
 			hub.Broadcast <- models.Message{
 				Type: "wordSelected",
 				Data: map[string]interface{}{
-					"word":     room.CurrentWord,
-					"drawerID": drawerID,
+					"wordLength": len(room.CurrentWord),
+					"drawerID":   drawerID,
 				},
 				RoomID: roomCode,
 			}
+
+			// Send actual word only to the drawer
+			hub.Mu.RLock()
+			if roomClients, ok := hub.Rooms[roomCode]; ok {
+				for client := range roomClients {
+					if client.ID == drawerID {
+						client.Send <- models.Message{
+							Type: "wordSelected",
+							Data: map[string]interface{}{
+								"word":       room.CurrentWord,
+								"wordLength": len(room.CurrentWord),
+								"drawerID":   drawerID,
+							},
+							RoomID: roomCode,
+						}
+						break
+					}
+				}
+			}
+			hub.Mu.RUnlock()
 
 			// Broadcast "is drawing now" message when word auto-selected
 			hub.Broadcast <- models.Message{
@@ -103,77 +123,126 @@ func startWordSelectionTimer(hub *models.Hub, roomManager *models.RoomManager, r
 			}
 
 			room.CancelTimer = make(chan struct{})
+			room.RevealedIndices = make(map[int]bool) 
 			drawCancelChan := room.CancelTimer
+			room.TimerGeneration++
+			myGeneration := room.TimerGeneration
 
-			go func() {
-				timer := time.NewTimer(80 * time.Second)
-				deadline := time.Now().Add(80 * time.Second)
-				room.TimerDeadline = deadline
+			wordLen := len(room.CurrentWord)
+			var hintTimes []int
+			
+			if wordLen >= 3 && wordLen <= 4 {
+				hintTimes = []int{35}
+			} else if wordLen >= 5 && wordLen <= 9 {
+				hintTimes = []int{35, 55}
+			} else if wordLen >= 10 {
+				hintTimes = []int{35, 55, 70}
+			}
 
-				hub.Broadcast <- models.Message{
-					Type: "timerStart",
-					Data: map[string]interface{}{
-						"duration": 80,
-						"deadline": deadline.Unix(),
-					},
-					RoomID: roomCode,
-				}
-				select {
-				case <-timer.C:
-					log.Printf("Drawing timer expired for room %s, advancing turn", roomCode)
+			for _, elapsedSeconds := range hintTimes {
+				go func(elapsed int, gen int) {
+					time.Sleep(time.Duration(elapsed) * time.Second)
 
 					roomManager.Lock()
-					room.CurrentWord = ""
-
-					currentIdx := -1
-					for i, id := range room.TurnOrder {
-						if id == room.CurrentDrawerID {
-							currentIdx = i
-							break
-						}
-					}
-					if currentIdx != -1 && len(room.TurnOrder) > 0 {
-						nextIdx := (currentIdx + 1) % len(room.TurnOrder)
-						room.CurrentDrawerID = room.TurnOrder[nextIdx]
-					}
-					roomManager.Unlock()
-					
-					room.TurnCount++
-					if room.TurnCount >= len(room.TurnOrder) {
-						room.Round++
-						room.TurnCount = 0
-					}
-
-					if room.Round > room.MaxRounds {
-						room.State = "finished"
-						hub.Broadcast <- models.Message{
-							Type: "gameOver",
-							Data: map[string]interface{}{
-								"message": "Game over!",
-								"scores":  room.Players,
-							},
-							RoomID: roomCode,
-						}
+					if room.TimerGeneration != gen {
+						roomManager.Unlock()
 						return
 					}
 
+					var available []int
+					for i := 0; i < wordLen; i++ {
+						if !room.RevealedIndices[i] {
+							available = append(available, i)
+						}
+					}
+					if len(available) == 0 {
+						roomManager.Unlock()
+						return
+					}
+
+					idx := available[rand.Intn(len(available))]
+					room.RevealedIndices[idx] = true
+					letter := string(room.CurrentWord[idx])
+					roomManager.Unlock()
+
 					hub.Broadcast <- models.Message{
-						Type: "turnEnd",
+						Type: "hint",
 						Data: map[string]interface{}{
-							"timedOut":		true,
-							"nextDrawer":	room.CurrentDrawerID,
-							"round":		room.Round,
-							"maxRounds":	room.MaxRounds,
+							"index":  idx,
+							"letter": letter,
 						},
 						RoomID: roomCode,
 					}
+				}(elapsedSeconds, myGeneration)
+			}
 
-					startWordSelectionTimer(hub, roomManager, roomCode, room.CurrentDrawerID, words)
-					return
-				case <-drawCancelChan:
-					timer.Stop()
+			timer := time.NewTimer(80 * time.Second)
+			deadline := time.Now().Add(80 * time.Second)
+			room.TimerDeadline = deadline
+
+			hub.Broadcast <- models.Message{
+				Type: "timerStart",
+				Data: map[string]interface{}{
+					"duration": 80,
+					"deadline": deadline.Unix(),
+				},
+				RoomID: roomCode,
+			}
+			select {
+			case <-timer.C:
+				log.Printf("Drawing timer expired for room %s, advancing turn", roomCode)
+
+				roomManager.Lock()
+				room.CurrentWord = ""
+
+				currentIdx := -1
+				for i, id := range room.TurnOrder {
+					if id == room.CurrentDrawerID {
+						currentIdx = i
+						break
+					}
 				}
-			}()
+				if currentIdx != -1 && len(room.TurnOrder) > 0 {
+					nextIdx := (currentIdx + 1) % len(room.TurnOrder)
+					room.CurrentDrawerID = room.TurnOrder[nextIdx]
+				}
+				roomManager.Unlock()
+				
+				room.TurnCount++
+				if room.TurnCount >= len(room.TurnOrder) {
+					room.Round++
+					room.TurnCount = 0
+				}
+
+				if room.Round > room.MaxRounds {
+					room.State = "finished"
+					hub.Broadcast <- models.Message{
+						Type: "gameOver",
+						Data: map[string]interface{}{
+							"message": "Game over!",
+							"scores":  room.Players,
+						},
+						RoomID: roomCode,
+					}
+					return
+				}
+
+				hub.Broadcast <- models.Message{
+					Type: "turnEnd",
+					Data: map[string]interface{}{
+						"timedOut":		true,
+						"nextDrawer":	room.CurrentDrawerID,
+						"round":		room.Round,
+						"maxRounds":	room.MaxRounds,
+					},
+					RoomID: roomCode,
+				}
+
+				startWordSelectionTimer(hub, roomManager, roomCode, room.CurrentDrawerID, words)
+				return
+			case <-drawCancelChan:
+				timer.Stop()
+			}
 		case <-cancelChan:
 			timer.Stop()
 		}
@@ -383,6 +452,7 @@ func readPump(c *models.Client, hub *models.Hub, roomManager *models.RoomManager
 				room.CancelTimer = nil
 			}
 			room.CurrentWord = word
+			room.RevealedIndices = make(map[int]bool)
 			cancelChan := make(chan struct{})
 			room.CancelTimer = cancelChan
 			roomManager.Unlock()
@@ -400,6 +470,55 @@ func readPump(c *models.Client, hub *models.Hub, roomManager *models.RoomManager
 			room.TimerGeneration++
 			myGeneration := room.TimerGeneration
 			roomManager.Unlock()
+
+			// Start hint goroutines
+			wordLen := len(word)
+			var hintTimes []int
+
+			if wordLen >= 3 && wordLen <= 4 {
+				hintTimes = []int{35}
+			} else if wordLen >= 5 && wordLen <= 9 {
+				hintTimes = []int{35, 55}
+			} else if wordLen >= 10 {
+				hintTimes = []int{35, 55, 70}
+			}
+
+			for _, elapsedSeconds := range hintTimes {
+				go func(elapsed int, gen int) {
+					time.Sleep(time.Duration(elapsed) * time.Second)
+
+					roomManager.Lock()
+					if room.TimerGeneration != gen {
+						roomManager.Unlock()
+						return
+					}
+
+					var available []int
+					for i := 0; i < wordLen; i++ {
+						if !room.RevealedIndices[i] {
+							available = append(available, i)
+						}
+					}
+					if len(available) == 0 {
+						roomManager.Unlock()
+						return
+					}
+
+					idx := available[rand.Intn(len(available))]
+					room.RevealedIndices[idx] = true
+					letter := string(room.CurrentWord[idx])
+					roomManager.Unlock()
+
+					hub.Broadcast <- models.Message{
+						Type: "hint",
+						Data: map[string]interface{}{
+							"index":  idx,
+							"letter": letter,
+						},
+						RoomID: c.RoomID,
+					}
+				}(elapsedSeconds, myGeneration)
+			}
 
 			go func() {
 				log.Printf(">>> TIMER STARTED: 80s drawing for room %s at %v", c.RoomID, time.Now())
@@ -504,15 +623,26 @@ func readPump(c *models.Client, hub *models.Hub, roomManager *models.RoomManager
 				}
 			}()
 
-			response := models.Message{
+			// Broadcast wordLength to all (drawer already knows the word)
+			hub.Broadcast <- models.Message{
 				Type: "wordSelected",
 				Data: map[string]interface{}{
-					"word":     word,
-					"drawerID": c.ID,
+					"wordLength": len(word),
+					"drawerID":   c.ID,
 				},
 				RoomID: c.RoomID,
 			}
-			hub.Broadcast <- response
+
+			// Send actual word to drawer (includes wordLength for consistency)
+			c.Send <- models.Message{
+				Type: "wordSelected",
+				Data: map[string]interface{}{
+					"word":       word,
+					"wordLength": len(word),
+					"drawerID":   c.ID,
+				},
+				RoomID: c.RoomID,
+			}
 			
 		case "getGameState":
 			roomCode := msg.Data.(map[string]interface{})["roomCode"].(string)

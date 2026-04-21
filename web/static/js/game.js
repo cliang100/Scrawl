@@ -7,6 +7,8 @@ let turnOrder = [];
 let isDrawer = false;
 let isHost = false;
 let selectedAvatar = '🎨'; // Default avatar
+let revealedLetters = [];
+let wordLength = 0;
 
 console.log('game.js loaded');
 
@@ -371,10 +373,9 @@ function showWordDisplay(type, word = '') {
         letterCount.style.display = 'none';
     } else if (type === 'guesser') {
         wordLabel.textContent = 'GUESS THIS';
-        const underscores = '_ '.repeat(word.length).trim();
-        wordContent.textContent = underscores;
         letterCount.style.display = 'inline-block';
-        letterCount.textContent = word.length.toString();
+        letterCount.textContent = wordLength.toString();
+        updateWordDisplay();
     } else if (type === 'waiting') {
         wordDisplay.classList.add('waiting');
         wordLabel.textContent = '';
@@ -390,6 +391,19 @@ function showGuessingUI() {
 
 function showCurrentWord() {
     // Handled by showWordDisplay
+}
+
+function updateWordDisplay() {
+    if (currentDrawerId === currentUserId) return; // drawer sees full word, not hangman
+    const wordContent = document.querySelector('.word-content');
+    if (!wordContent || wordLength === 0) return;
+
+    let display = '';
+    for (let i = 0; i < wordLength; i++) {
+        display += revealedLetters[i] ? revealedLetters[i] : '_';
+        if (i < wordLength - 1) display += ' ';
+    }
+    wordContent.textContent = display;
 }
 
 function handleGameStateUpdate(data) {
@@ -417,6 +431,8 @@ function handleGameStateUpdate(data) {
     setTimeout(() => {
         updateGameUI();
     }, 100);
+    revealedLetters = [];
+    wordLength = 0;
 }
 
 function sendGuess() {
