@@ -1,16 +1,44 @@
 class DrawingCanvas {
     constructor(canvasId) {
         this.canvas = document.getElementById(canvasId);
-        this.ctx = this.canvas.getContext('2d');
+        this.ctx = this.canvas.getContext('2d', { willReadFrequently: true });
         this.isDrawing = false;
-        this.currentTool = 'pen';
-        this.currentColor = '#000000';
-        this.currentSize = 2;
-        
+        this.setColor('#000000');
+        this.setSize(5);
         this.setupCanvas();
         this.setupEventListeners();
-
         this.strokes = [];
+        this.currentStroke = null;
+        this.strokeBuffer = [];
+        this.flushInterval = null;
+    }
+
+    bufferPoint(x, y) {
+        this.strokeBuffer.push({x, y});
+
+        clearTimeout(this.flushInterval);
+        this.flushInterval = setTimeout(() => this.flushStroke(), 50);
+
+        if (this.strokeBuffer.length >= 20) {
+            this.flushStroke();
+        }
+    }
+
+    flushStroke() {
+        if (this.strokeBuffer.length === 0) return;
+
+        if (ws && ws.readyState === WebSocket.OPEN) {
+            ws.send(JSON.stringify({
+                type: 'stroke',
+                data: {
+                    points: [...this.strokeBuffer],
+                    color: this.currentColor,
+                    size: this.currentSize
+                }
+            }));
+        }
+
+        this.strokeBuffer = [];
     }
     
     setupCanvas() {
@@ -32,7 +60,32 @@ class DrawingCanvas {
         this.canvas.addEventListener('mousedown', (e) => this.startDrawing(e));
         this.canvas.addEventListener('mousemove', (e) => this.draw(e));
         this.canvas.addEventListener('mouseup', () => this.stopDrawing());
-        this.canvas.addEventListener('mouseout', () => this.stopDrawing());
+        // Track if we should continue drawing when re-entering canvas
+        this.isMouseDown = false;
+        this.shouldResumeDrawing = false;
+        
+        // Track mouse button state on document level
+        document.addEventListener('mouseup', () => {
+            this.isMouseDown = false;
+            this.shouldResumeDrawing = false;
+            this.stopDrawing();
+        });
+        document.addEventListener('mousedown', () => {
+            this.isMouseDown = true;
+        });
+        
+        this.canvas.addEventListener('mouseout', () => {
+            if (this.isDrawing) {
+                this.shouldResumeDrawing = true;
+                this.isDrawing = false;
+            }
+        });
+        
+        this.canvas.addEventListener('mouseenter', (e) => {
+            if (this.shouldResumeDrawing && this.isMouseDown) {
+                this.startDrawing(e);
+            }
+        });
         
         // Touch events for mobile
         this.canvas.addEventListener('touchstart', (e) => this.handleTouch(e, 'start'));
@@ -77,7 +130,7 @@ class DrawingCanvas {
 
         this.strokes[this.strokes.length - 1].points.push({x, y});
 
-        this.sendDrawEvent('start', x, y);
+        this.bufferPoint(x, y);
     }
     
     draw(e) {
@@ -89,18 +142,20 @@ class DrawingCanvas {
         
         this.ctx.strokeStyle = this.currentColor;
         this.ctx.lineWidth = this.currentSize;
+        this.ctx.lineCap = 'round';
+        this.ctx.lineJoin = 'round';
         this.ctx.lineTo(x, y);
         this.ctx.stroke();
         
         this.strokes[this.strokes.length - 1].points.push({x, y});
 
-        this.sendDrawEvent('draw', x, y);
+        this.bufferPoint(x, y);
     }
     
     stopDrawing() {
         if (this.isDrawing) {
             this.isDrawing = false;
-            this.sendDrawEvent('stop', 0, 0);
+            this.flushStroke();
         }
     }
     
@@ -122,6 +177,7 @@ class DrawingCanvas {
     clearCanvas() {
         this.ctx.fillStyle = '#ffffff';
         this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+        this.strokes = [];  // Clear stroke history
     }
     
     setColor(color) {
@@ -138,6 +194,9 @@ class DrawingCanvas {
 
     replayStrokes() {
         this.strokes.forEach(stroke => {
+            // Skip fill strokes (they have no points)
+            if (stroke.type === 'fill' || !stroke.points) return;
+            
             this.ctx.strokeStyle = stroke.color;
             this.ctx.lineWidth = stroke.size;
             this.ctx.beginPath();
@@ -216,6 +275,9 @@ class DrawingCanvas {
         }
 
         this.ctx.putImageData(imageData, 0, 0);
+        
+        // Redraw strokes to cover anti-aliased edges
+        this.replayStrokes();
 
         this.strokes.push({
             type: 'fill',

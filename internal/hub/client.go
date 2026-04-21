@@ -779,6 +779,10 @@ func readPump(c *models.Client, hub *models.Hub, roomManager *models.RoomManager
 			msg.RoomID = c.RoomID
 			msg.UserID = c.ID
 			hub.Broadcast <- msg
+		case "stroke":
+			msg.RoomID = c.RoomID
+			msg.UserID = c.ID
+			hub.Broadcast <- msg
 		default:
 			hub.Broadcast <- msg
 		}

@@ -257,7 +257,36 @@ function connectWebSocket() {
                 handleDrawEvent(message.data);    
             }
         }
+
+        if (message.type === 'stroke' && drawingCanvas) {
+            if (message.userId !== currentUserId) {
+                handleStrokeEvent(message.data);
+            }
+        }
     };
+
+    function handleStrokeEvent(data) {
+        const { points, color, size } = data;
+        if (!points || points.length === 0) return;
+
+        drawingCanvas.ctx.strokeStyle = color;
+        drawingCanvas.ctx.lineWidth = size;
+        drawingCanvas.ctx.lineCap = 'round';
+        drawingCanvas.ctx.lineJoin = 'round';
+        drawingCanvas.ctx.beginPath();
+        drawingCanvas.ctx.moveTo(points[0].x, points[0].y);
+
+        for (let i = 1; i < points.length; i++) {
+            drawingCanvas.ctx.lineTo(points[i].x, points[i].y);
+        }
+
+        drawingCanvas.ctx.stroke();
+        drawingCanvas.strokes.push({
+            points: points,
+            color,
+            size,
+        });
+    }
 
     ws.onerror = function(error) {
         console.error('WebSocket error:', error);
@@ -293,6 +322,8 @@ function handleDrawEvent(data) {
         case 'start':
             drawingCanvas.ctx.strokeStyle = color;
             drawingCanvas.ctx.lineWidth = size;
+            drawingCanvas.ctx.lineCap = 'round';
+            drawingCanvas.ctx.lineJoin = 'round';
             drawingCanvas.strokes.push({
                 points: [],
                 color,
