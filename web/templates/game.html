@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Scrawl - Game</title>
     <link rel="stylesheet" href="/static/css/style.css">
+    <link rel="stylesheet" href="/static/css/lobby-overlay.css">
 </head>
 <body>
     <!-- Game Title -->
@@ -38,6 +39,60 @@
         <!-- Center: Canvas Area -->
         <div class="center-column">
             <canvas id="drawingCanvas"></canvas>
+            
+            <!-- Lobby Overlay -->
+            <div id="lobbyOverlay">
+                <div class="lobby-room-code" id="lobbyRoomCode">ROOM</div>
+                
+                <div class="lobby-settings">
+                    <div class="settings-title">Game Settings</div>
+                    
+                    <div class="setting-row">
+                        <span class="setting-label">Rounds</span>
+                        <div class="dropdown" id="roundsDropdown">
+                            <div class="dropdown-value" id="roundsValue">3</div>
+                            <div class="dropdown-menu hidden">
+                                <div class="dropdown-item" data-value="1">1</div>
+                                <div class="dropdown-item" data-value="2">2</div>
+                                <div class="dropdown-item" data-value="3">3</div>
+                                <div class="dropdown-item" data-value="4">4</div>
+                                <div class="dropdown-item" data-value="5">5</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="setting-row">
+                        <span class="setting-label">Draw Time</span>
+                        <div class="dropdown" id="drawTimeDropdown">
+                            <div class="dropdown-value" id="drawTimeValue">80s</div>
+                            <div class="dropdown-menu hidden">
+                                <div class="dropdown-item" data-value="30">30s</div>
+                                <div class="dropdown-item" data-value="40">40s</div>
+                                <div class="dropdown-item" data-value="60">60s</div>
+                                <div class="dropdown-item" data-value="80">80s</div>
+                                <div class="dropdown-item" data-value="100">100s</div>
+                                <div class="dropdown-item" data-value="120">120s</div>
+                                <div class="dropdown-item" data-value="150">150s</div>
+                                <div class="dropdown-item" data-value="180">180s</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="lobby-actions">
+                    <button class="lobby-btn lobby-btn-primary" id="startGameBtn">
+                        <span>▶</span> Start Game
+                    </button>
+                    <button class="lobby-btn lobby-btn-secondary" id="copyCodeBtn">
+                        <span>🔗</span> Invite
+                    </button>
+                </div>
+                
+                <div class="waiting-message" id="waitingMessage" style="display: none;">
+                    Waiting for host to start...
+                </div>
+            </div>
+            
             <div class="toolbar">
                 <div class="color-palette">
                     <div class="color-row">

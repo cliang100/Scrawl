@@ -117,7 +117,50 @@ func (rm *RoomManager) JoinRoom(roomCode, playerID, name, avatar string) (*Room,
 		return nil, fmt.Errorf("room not found")
 	}
 
-	if _, exists := room.Players[playerID]; !exists {
+	// Check if player with this ID already exists
+	if _, exists := room.Players[playerID]; exists {
+		return room, nil
+	}
+
+	// Check if a player with the same name already exists (reconnecting)
+	var existingPlayerID string
+	for id, p := range room.Players {
+		if p.Name == name {
+			existingPlayerID = id
+			break
+		}
+	}
+
+	if existingPlayerID != "" {
+		// Player is reconnecting - update their ID but keep their data
+		oldPlayer := room.Players[existingPlayerID]
+		delete(room.Players, existingPlayerID)
+		
+		// Create new entry with updated ID
+		room.Players[playerID] = &Player{
+			ID:     playerID,
+			Name:   oldPlayer.Name,
+			Avatar: oldPlayer.Avatar,
+			IsHost: oldPlayer.IsHost,
+			Score:  oldPlayer.Score,
+		}
+		
+		// Update turn order to use new ID
+		for i, id := range room.TurnOrder {
+			if id == existingPlayerID {
+				room.TurnOrder[i] = playerID
+				break
+			}
+		}
+		
+		// If this player was the host, update room.HostID to new ID
+		if oldPlayer.IsHost {
+			room.HostID = playerID
+		}
+		
+		fmt.Printf("Player %s reconnected with new ID: %s -> %s (host: %v)\n", name, existingPlayerID, playerID, oldPlayer.IsHost)
+	} else {
+		// New player joining
 		newPlayer := &Player{
 			ID:     playerID,
 			Name:   name,

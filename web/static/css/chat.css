@@ -39,6 +39,7 @@
 .guess-message {
     padding: 6px 0;
     border-bottom: 1px solid #eee;
+    color: #333;
 }
 
 .guess-message:last-child {

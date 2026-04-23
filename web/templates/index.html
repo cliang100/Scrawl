@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Scrawl - Draw & Guess</title>
+    <link rel="stylesheet" href="/static/css/landing.css">
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@400;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="landing-container">
+        <!-- Logo -->
+        <div class="logo-section">
+            <h1 class="logo">🎨 Scrawl</h1>
+            <p class="tagline">Draw, Guess, Laugh!</p>
+        </div>
+
+        <!-- Character Creation -->
+        <div class="character-card">
+            <h2>Create Your Character</h2>
+            
+            <div class="avatar-section">
+                <div class="selected-avatar" id="selectedAvatar">🎨</div>
+                <p class="avatar-label">Choose your avatar</p>
+                <div class="avatar-grid">
+                    <div class="avatar-option active" data-avatar="🎨">🎨</div>
+                    <div class="avatar-option" data-avatar="🦊">🦊</div>
+                    <div class="avatar-option" data-avatar="🐱">🐱</div>
+                    <div class="avatar-option" data-avatar="🐶">🐶</div>
+                    <div class="avatar-option" data-avatar="🦄">🦄</div>
+                    <div class="avatar-option" data-avatar="🐼">🐼</div>
+                    <div class="avatar-option" data-avatar="🦋">🦋</div>
+                    <div class="avatar-option" data-avatar="🐸">🐸</div>
+                    <div class="avatar-option" data-avatar="🦁">🦁</div>
+                    <div class="avatar-option" data-avatar="🐰">🐰</div>
+                    <div class="avatar-option" data-avatar="🦉">🦉</div>
+                    <div class="avatar-option" data-avatar="🐙">🐙</div>
+                </div>
+            </div>
+
+            <div class="name-section">
+                <input type="text" id="playerName" placeholder="Enter your name" maxlength="12" autocomplete="off">
+            </div>
+        </div>
+
+        <!-- Room Actions -->
+        <div class="room-actions">
+            <button class="btn btn-play" id="playBtn">
+                <span class="btn-icon">🎮</span>
+                Play
+            </button>
+            
+            <button class="btn btn-create-private" id="createRoomBtn">
+                <span class="btn-icon">🔒</span>
+                Create Private Room
+            </button>
+            
+            <!-- Hidden join UI (shown when Play clicked without invite) -->
+            <div id="joinUI" class="join-ui hidden">
+                <input type="text" id="roomCode" placeholder="Room code (6 chars)" maxlength="6" autocomplete="off">
+                <button class="btn btn-join" id="joinRoomBtn">
+                    <span class="btn-icon">🚪</span>
+                    Join
+                </button>
+                <button class="btn btn-back" id="backBtn">← Back</button>
+            </div>
+        </div>
+
+        <!-- How to Play -->
+        <div class="how-to-play">
+            <h3>How to Play</h3>
+            <div class="steps">
+                <div class="step">
+                    <span class="step-num">1</span>
+                    <p>One player draws a word</p>
+                </div>
+                <div class="step">
+                    <span class="step-num">2</span>
+                    <p>Others guess in chat</p>
+                </div>
+                <div class="step">
+                    <span class="step-num">3</span>
+                    <p>Score points for guessing!</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notification Toast -->
+    <div id="toast" class="toast hidden"></div>
+
+    <script src="/static/js/landing.js"></script>
+</body>
+</html>

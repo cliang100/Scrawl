@@ -4,53 +4,86 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Scrawl - Lobby</title>
-    <link rel="stylesheet" href="/static/css/style.css">
+    <link rel="stylesheet" href="/static/css/lobby.css">
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@400;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
-    <div class="container">
-        <h1>Scrawl</h1>
-        <p>Multiplayer drawing game</p>
-        
-        <!-- Player Setup -->
-        <div class="player-setup">
-            <div class="setup-group">
-                <label for="playerName">Your Name:</label>
-                <input type="text" id="playerName" placeholder="Enter your name" maxlength="12">
+    <div class="lobby-container">
+        <!-- Header -->
+        <header class="lobby-header">
+            <button class="btn-back" id="leaveRoomBtn">← Leave</button>
+            <h1 class="lobby-title">🎨 Scrawl Lobby</h1>
+            <div class="room-code-display">
+                <span class="code-label">Room Code:</span>
+                <span class="code-value" id="currentRoomCode">----</span>
+                <button class="btn-copy" id="copyCodeBtn" title="Copy code">📋</button>
             </div>
-            <div class="setup-group">
-                <label>Choose Avatar:</label>
-                <div class="avatar-selection">
-                    <div class="avatar-option" data-avatar="🎨">🎨</div>
-                    <div class="avatar-option" data-avatar="🦊">🦊</div>
-                    <div class="avatar-option" data-avatar="🐱">🐱</div>
-                    <div class="avatar-option" data-avatar="🐶">🐶</div>
-                    <div class="avatar-option" data-avatar="🦄">🦄</div>
-                    <div class="avatar-option" data-avatar="🐼">🐼</div>
-                    <div class="avatar-option" data-avatar="🦋">🦋</div>
-                    <div class="avatar-option" data-avatar="🐸">🐸</div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="lobby-main">
+            <!-- Left: Players -->
+            <section class="players-section">
+                <h2>Players <span id="playerCount">(0/8)</span></h2>
+                <div class="players-list" id="playerList">
+                    <!-- Players populated by JS -->
                 </div>
-            </div>
-        </div>
-        
-        <div class="room-actions">
-            <button onclick="createRoom()">Create Room</button>
-            <div class="join-room">
-                <input type="text" id="roomCode" placeholder="Enter room code" maxlength="6">
-                <button onclick="joinRoom()">Join Room</button>
-            </div>
-        </div>
-        
-        <div id="roomInfo" class="hidden">
-            <h3>Room Code: <span id="currentRoomCode"></span></h3>
-            <div id="playersSection">
-                <h4>Players:</h4>
-                <ul id="playerList"></ul>
-            </div>
-            <button onclick="startGame()" id="startGameBtn">Start Game</button>
-        </div>
+            </section>
+
+            <!-- Center: Settings (Host only) -->
+            <section class="settings-section" id="settingsSection">
+                <h2>Game Settings</h2>
+                
+                <div class="setting-item">
+                    <label for="roundsSetting">Rounds</label>
+                    <div class="setting-control">
+                        <button class="btn-minus" data-setting="rounds" data-delta="-1">−</button>
+                        <span class="setting-value" id="roundsValue">3</span>
+                        <button class="btn-plus" data-setting="rounds" data-delta="1">+</button>
+                    </div>
+                </div>
+
+                <div class="setting-item">
+                    <label for="timeSetting">Drawing Time</label>
+                    <div class="setting-control">
+                        <button class="btn-minus" data-setting="time" data-delta="-10">−</button>
+                        <span class="setting-value" id="timeValue">80s</span>
+                        <button class="btn-plus" data-setting="time" data-delta="10">+</button>
+                    </div>
+                </div>
+
+                <div class="setting-hint">
+                    <p>💡 Everyone takes turns drawing. Most points wins!</p>
+                </div>
+            </section>
+
+            <!-- Right: Chat (placeholder for now) -->
+            <section class="chat-section">
+                <h2>Lobby Chat</h2>
+                <div class="chat-messages" id="lobbyChat">
+                    <div class="chat-welcome">Welcome to the lobby! Chat with other players here.</div>
+                </div>
+                <div class="chat-input">
+                    <input type="text" id="lobbyChatInput" placeholder="Type a message..." maxlength="100">
+                    <button id="lobbyChatSend">Send</button>
+                </div>
+            </section>
+        </main>
+
+        <!-- Footer: Start Game -->
+        <footer class="lobby-footer">
+            <div class="waiting-message" id="waitingMessage">Waiting for host to start...</div>
+            <button class="btn-start-game" id="startGameBtn" disabled>
+                <span class="btn-text">Start Game</span>
+                <span class="btn-subtext" id="startSubtext">Need at least 2 players</span>
+            </button>
+        </footer>
     </div>
-    
+
+    <!-- Toast Notification -->
+    <div id="toast" class="toast hidden"></div>
+
     <script src="/static/js/socket.js"></script>
-    <script src="/static/js/game.js"></script>
+    <script src="/static/js/lobby.js"></script>
 </body>
 </html>

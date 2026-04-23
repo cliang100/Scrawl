@@ -1,0 +1,231 @@
+/* Lobby Overlay - Covers canvas area only */
+
+#lobbyOverlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(145deg, #f8fafc 0%, #e2e8f0 50%, #cbd5e1 100%);
+    border: 2px solid #e1e5e9;
+    border-radius: 12px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 40px;
+    z-index: 100;
+    transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+#lobbyOverlay.hidden {
+    display: none;
+}
+
+#lobbyOverlay.exiting {
+    transform: translateY(-100%);
+    opacity: 0;
+}
+
+/* Guest styling - dimmed controls */
+#lobbyOverlay.is-guest .setting-control {
+    opacity: 0.6;
+    pointer-events: none;
+}
+
+#lobbyOverlay.is-guest #startGameBtn {
+    display: none;
+}
+
+/* Room Code Display */
+.lobby-room-code {
+    font-size: 2.5rem;
+    font-weight: 800;
+    color: #4a5568;
+    letter-spacing: 0.15em;
+    margin-bottom: 30px;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    background: white;
+    padding: 12px 32px;
+    border-radius: 12px;
+    border: 2px solid #e1e5e9;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+}
+
+/* Settings Section */
+.lobby-settings {
+    background: rgba(255,255,255,0.15);
+    backdrop-filter: blur(10px);
+    border-radius: 16px;
+    padding: 30px 40px;
+    margin-bottom: 30px;
+    width: 100%;
+    max-width: 400px;
+}
+
+.settings-title {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #4a5568;
+    margin-bottom: 20px;
+    text-align: center;
+}
+
+.setting-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+    padding: 12px 16px;
+    background: white;
+    border: 1px solid #e1e5e9;
+    border-radius: 10px;
+}
+
+.setting-row:last-child {
+    margin-bottom: 0;
+}
+
+.setting-label {
+    color: #4a5568;
+    font-weight: 500;
+    font-size: 0.95rem;
+}
+
+/* Dropdown */
+.dropdown {
+    position: relative;
+    cursor: pointer;
+}
+
+.dropdown-value {
+    background: #f7fafc;
+    color: #4a5568;
+    border: 1px solid #e1e5e9;
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-weight: 600;
+    min-width: 80px;
+    text-align: center;
+    transition: all 0.2s;
+}
+
+.dropdown:hover .dropdown-value {
+    background: #edf2f7;
+    border-color: #cbd5e0;
+}
+
+.dropdown-menu {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    margin-top: 8px;
+    background: white;
+    border-radius: 10px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+    min-width: 100px;
+    z-index: 101;
+    overflow: hidden;
+}
+
+.dropdown-menu.hidden {
+    display: none;
+}
+
+.dropdown-item {
+    padding: 10px 16px;
+    color: #333;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.dropdown-item:hover {
+    background: #f0f0f0;
+}
+
+/* Action Buttons */
+.lobby-actions {
+    display: flex;
+    gap: 15px;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+.lobby-btn {
+    padding: 14px 32px;
+    border-radius: 12px;
+    font-weight: 700;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    border: none;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.lobby-btn-primary {
+    background: #48bb78;
+    color: white;
+}
+
+.lobby-btn-primary:hover:not(:disabled) {
+    background: #38a169;
+    transform: translateY(-2px);
+}
+
+.lobby-btn-primary:disabled {
+    background: #a0aec0;
+    cursor: not-allowed;
+    opacity: 0.7;
+}
+
+.lobby-btn-secondary {
+    background: white;
+    color: #4a5568;
+    border: 2px solid #e1e5e9;
+}
+
+.lobby-btn-secondary:hover {
+    background: #f7fafc;
+    border-color: #cbd5e0;
+}
+
+/* Waiting message for guests */
+.waiting-message {
+    color: #718096;
+    font-size: 1.1rem;
+    font-weight: 500;
+    margin-top: 10px;
+}
+
+/* Toast notifications */
+.toast {
+    position: fixed;
+    bottom: 30px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #333;
+    color: white;
+    padding: 14px 28px;
+    border-radius: 10px;
+    font-weight: 600;
+    z-index: 10000;
+    transition: all 0.3s;
+    font-family: 'Nunito', sans-serif;
+}
+
+.toast.hidden {
+    opacity: 0;
+    transform: translateX(-50%) translateY(20px);
+    pointer-events: none;
+}
+
+.toast.success {
+    background: #48bb78;
+}
+
+.toast.error {
+    background: #e53e3e;
+}

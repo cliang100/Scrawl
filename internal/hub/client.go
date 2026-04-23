@@ -306,7 +306,8 @@ func readPump(c *models.Client, hub *models.Hub, roomManager *models.RoomManager
 			c.Send <- response
 
 		case "joinRoom":
-			roomCode := msg.Data.(map[string]interface{})["roomCode"].(string)
+			// Room code comes from WebSocket URL (c.RoomID), not message data
+			roomCode := c.RoomID
 			name := msg.Data.(map[string]interface{})["name"].(string)
 			avatar := msg.Data.(map[string]interface{})["avatar"].(string)
 			room, err := roomManager.JoinRoom(roomCode, c.ID, name, avatar)

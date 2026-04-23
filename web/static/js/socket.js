@@ -3,7 +3,16 @@ let isWinner = false;
 
 function connectWebSocket() {
     const urlParams = new URLSearchParams(window.location.search);
-    const roomCode = urlParams.get('room');
+    let roomCode = urlParams.get('room');
+    
+    // If no query param, try path format (e.g., /ABC123)
+    if (!roomCode) {
+        const path = window.location.pathname;
+        const pathCode = path.substring(1); // Remove leading /
+        if (pathCode && pathCode !== '' && pathCode !== 'game' && pathCode !== 'lobby') {
+            roomCode = pathCode;
+        }
+    }
 
     console.log('Room code from URL:', roomCode);
 
@@ -29,6 +38,14 @@ function connectWebSocket() {
             console.log('Set currentUserId to:', currentUserId);
         }
 
+        // Route lobby messages to handleLobbyMessage if overlay exists
+        const lobbyMessageTypes = ['roomUpdated', 'settingsUpdated', 'gameStarted', 'roomError'];
+        const overlay = document.getElementById('lobbyOverlay');
+        if (lobbyMessageTypes.includes(message.type) && overlay && !overlay.classList.contains('hidden')) {
+            handleLobbyMessage(event);
+            return;
+        }
+
         switch (message.type) {
             case 'roomCreated':
                 console.log('Processing roomCreated:', message.data);
@@ -48,9 +65,8 @@ function connectWebSocket() {
                 updateRoomUI(message.data.roomCode, message.data.players, message.data.hostId);
                 break;
             case 'gameStarted':
-                const name = document.getElementById('playerName')?.value.trim() || '';
-                console.log('gameStarted recieved, navigating with name', name);
-                window.location.href = `/game?room=${message.data.roomCode}&name=${encodeURIComponent(name)}`;
+                console.log('gameStarted received');
+                // Lobby overlay handles this via handleLobbyMessage
                 break;
             case 'gameStateUpdate':
                 console.log('Processing gameStateUpdate:', message.data);

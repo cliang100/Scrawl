@@ -440,9 +440,15 @@ function sendGuess() {
     const guess = guessInput.value.trim();
     
     if (guess && ws && ws.readyState === WebSocket.OPEN) {
-        // Get current user's name
-        const currentUser = currentPlayers[currentUserId];
-        const userName = currentUser ? currentUser.name : 'Someone';
+        // Get current user's name from lobbyPlayers or localStorage
+        let userName = 'Someone';
+        const myPlayer = currentPlayers ? Object.values(currentPlayers).find(p => p.id === currentUserId) : null;
+        if (myPlayer) {
+            userName = myPlayer.name;
+        } else {
+            // Fallback to localStorage
+            userName = localStorage.getItem('scrawl_player_name') || 'Someone';
+        }
         
         ws.send(JSON.stringify({
             type: 'guess',
@@ -466,5 +472,326 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
+    // Initialize lobby overlay if on room page
+    initLobby();
+
     console.log('Buttons use onclick attributes, no event listeners needed');
 });
+
+// ========== LOBBY OVERLAY MANAGEMENT ==========
+
+let lobbySettings = {
+    maxPlayers: 8,
+    rounds: 3,
+    drawTime: 80
+};
+
+let lobbyPlayers = [];
+let gameStarted = false;
+
+function initLobby() {
+    // Check if we're on a room page (URL has room code)
+    const path = window.location.pathname;
+    const roomCode = path.substring(1);
+    
+    // Skip if on landing page or other non-room paths
+    if (!roomCode || roomCode === '' || roomCode === 'game' || roomCode === 'lobby') {
+        console.log('Not on room page, skipping lobby init');
+        return;
+    }
+    
+    console.log('Initializing lobby for room:', roomCode);
+    currentRoom = roomCode;
+    
+    // Load player data
+    const playerName = localStorage.getItem('scrawl_name') || 'Player';
+    const playerAvatar = localStorage.getItem('scrawl_avatar') || '🎨';
+    isHost = localStorage.getItem('scrawl_is_host') === 'true';
+    
+    // Update room code display
+    const roomCodeEl = document.getElementById('lobbyRoomCode');
+    if (roomCodeEl) roomCodeEl.textContent = roomCode.toUpperCase();
+    
+    // Setup lobby UI
+    setupLobbyControls();
+    updateLobbyPlayerCount();
+    
+    // Send joinRoom message once WebSocket is ready
+    setTimeout(() => {
+        if (ws && ws.readyState === WebSocket.OPEN) {
+            console.log('Sending joinRoom for:', playerName, playerAvatar);
+            ws.send(JSON.stringify({
+                type: 'joinRoom',
+                data: {
+                    name: playerName,
+                    avatar: playerAvatar
+                }
+            }));
+        } else {
+            console.log('WebSocket not ready yet, will retry...');
+        }
+    }, 500);
+}
+
+function setupLobbyControls() {
+    const overlay = document.getElementById('lobbyOverlay');
+    if (!overlay) return;
+    
+    // Host/guest styling
+    if (!isHost) {
+        overlay.classList.add('is-guest');
+    }
+    
+    // Setup dropdowns (host only can click)
+    setupDropdown('rounds', (val) => {
+        lobbySettings.rounds = parseInt(val);
+        broadcastSettings();
+    });
+    
+    setupDropdown('drawTime', (val) => {
+        lobbySettings.drawTime = parseInt(val);
+        broadcastSettings();
+    });
+    
+    // Start game button (host only)
+    const startBtn = document.getElementById('startGameBtn');
+    if (startBtn) {
+        startBtn.addEventListener('click', () => {
+            const playerCount = lobbyPlayers.length;
+            if (playerCount < 2) {
+                showToast('Need at least 2 players!', 'error');
+                return;
+            }
+            
+            if (ws && ws.readyState === WebSocket.OPEN) {
+                ws.send(JSON.stringify({
+                    type: 'startGame',
+                    data: {
+                        roomCode: currentRoom,
+                        maxRounds: lobbySettings.rounds,
+                        drawTime: lobbySettings.drawTime
+                    }
+                }));
+            }
+        });
+    }
+    
+    // Copy invite button
+    const copyBtn = document.getElementById('copyCodeBtn');
+    if (copyBtn) {
+        copyBtn.addEventListener('click', () => {
+            const code = currentRoom || '';
+            const inviteUrl = `${window.location.origin}/?room=${code}`;
+            navigator.clipboard.writeText(inviteUrl).then(() => {
+                showToast('Invite link copied!', 'success');
+            });
+        });
+    }
+}
+
+function setupDropdown(settingName, onChange) {
+    const dropdown = document.getElementById(settingName + 'Dropdown');
+    if (!dropdown) return;
+    
+    const valueEl = dropdown.querySelector('.dropdown-value');
+    const menu = dropdown.querySelector('.dropdown-menu');
+    
+    dropdown.addEventListener('click', (e) => {
+        if (!isHost) return;
+        e.stopPropagation();
+        document.querySelectorAll('.dropdown-menu').forEach(m => {
+            if (m !== menu) m.classList.add('hidden');
+        });
+        menu.classList.toggle('hidden');
+    });
+    
+    const items = dropdown.querySelectorAll('.dropdown-item');
+    items.forEach(item => {
+        item.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const val = item.dataset.value;
+            valueEl.textContent = item.textContent;
+            menu.classList.add('hidden');
+            onChange(val);
+        });
+    });
+}
+
+document.addEventListener('click', () => {
+    document.querySelectorAll('.dropdown-menu').forEach(m => m.classList.add('hidden'));
+});
+
+function handleLobbyMessage(event) {
+    const message = JSON.parse(event.data);
+    console.log('Lobby message:', message);
+    
+    switch (message.type) {
+        case 'roomUpdated':
+            updateLobbyPlayers(message.data.players, message.data.hostId);
+            break;
+            
+        case 'settingsUpdated':
+            if (!isHost) {
+                lobbySettings = message.data;
+                updateSettingsDisplay();
+            }
+            break;
+            
+        case 'gameStarted':
+            hideLobbyOverlay();
+            gameStarted = true;
+            startGameFromLobby(message.data);
+            break;
+            
+        case 'roomError':
+            showToast(message.data.error, 'error');
+            break;
+    }
+}
+
+function updateLobbyPlayers(players, hostId) {
+    const playersArray = Array.isArray(players) ? players : Object.values(players);
+    lobbyPlayers = playersArray;
+    
+    // Update left sidebar player list
+    const listEl = document.getElementById('gamePlayerList');
+    if (!listEl) return;
+    
+    listEl.innerHTML = '';
+    
+    let currentRank = 1;
+    let lastScore = null;
+    
+    playersArray.forEach((player, index) => {
+        const playerScore = player.score || 0;
+        if (lastScore !== null && playerScore < lastScore) {
+            currentRank = index + 1;
+        }
+        lastScore = playerScore;
+        
+        const isPlayerHost = player.id === hostId;
+        const isYou = player.id === currentUserId;
+        
+        const card = document.createElement('div');
+        card.className = 'player-box' + (index % 2 === 1 ? ' alt-row' : '');
+        card.innerHTML = `
+            <div class="player-rank">#${currentRank}</div>
+            ${isPlayerHost ? '<div class="player-host">👑</div>' : '<div class="player-host-placeholder"></div>'}
+            <div class="player-info">
+                <div class="player-name">${player.name}${isYou ? ' <span class="you-tag">(You)</span>' : ''}</div>
+                <div class="player-score">${playerScore} points</div>
+            </div>
+            <div class="player-avatar">${player.avatar || '🎨'}</div>
+        `;
+        listEl.appendChild(card);
+    });
+    
+    updateStartButton();
+}
+
+function hideLobbyOverlay() {
+    const overlay = document.getElementById('lobbyOverlay');
+    if (overlay) {
+        overlay.classList.add('exiting');
+        setTimeout(() => {
+            overlay.classList.add('hidden');
+            overlay.classList.remove('exiting');
+        }, 600);
+    }
+}
+
+function updateStartButton() {
+    const startBtn = document.getElementById('startGameBtn');
+    if (!startBtn || !isHost) return;
+    
+    const canStart = lobbyPlayers.length >= 2;
+    startBtn.disabled = !canStart;
+    
+    if (!canStart) {
+        startBtn.title = `Need ${2 - lobbyPlayers.length} more player${lobbyPlayers.length === 1 ? '' : 's'} to start`;
+    } else {
+        startBtn.title = 'Start the game!';
+    }
+}
+
+function updateLobbyPlayerCount() {
+    const maxDisplay = document.getElementById('maxPlayersDisplay');
+    if (maxDisplay) maxDisplay.textContent = lobbySettings.maxPlayers;
+}
+
+function updateSettingsDisplay() {
+    const roundsVal = document.getElementById('roundsValue');
+    const timeVal = document.getElementById('drawTimeValue');
+    if (roundsVal) roundsVal.textContent = lobbySettings.rounds;
+    if (timeVal) timeVal.textContent = lobbySettings.drawTime + 's';
+}
+
+function broadcastSettings() {
+    if (!isHost || !ws) return;
+    
+    ws.send(JSON.stringify({
+        type: 'updateSettings',
+        data: lobbySettings
+    }));
+}
+
+function startGameFromLobby(data) {
+    console.log('Starting game with settings:', data);
+    
+    if (data.rounds) {
+        const roundDisplay = document.getElementById('roundDisplay');
+        if (roundDisplay) roundDisplay.textContent = `Round 1 of ${data.rounds}`;
+    }
+    
+    if (data.drawTime) {
+        const timer = document.getElementById('timer');
+        if (timer) timer.textContent = data.drawTime + 's';
+    }
+    
+    ws.send(JSON.stringify({
+        type: 'getGameState',
+        data: { roomCode: currentRoom }
+    }));
+}
+
+function showToast(message, type = 'info') {
+    let toast = document.getElementById('toast');
+    if (!toast) {
+        toast = document.createElement('div');
+        toast.id = 'toast';
+        toast.className = 'toast hidden';
+        document.body.appendChild(toast);
+        
+        if (!document.getElementById('toast-styles')) {
+            const style = document.createElement('style');
+            style.id = 'toast-styles';
+            style.textContent = `
+                .toast {
+                    position: fixed;
+                    bottom: 30px;
+                    left: 50%;
+                    transform: translateX(-50%);
+                    background: #333;
+                    color: white;
+                    padding: 14px 28px;
+                    border-radius: 10px;
+                    font-weight: 600;
+                    z-index: 10000;
+                    transition: all 0.3s;
+                    font-family: 'Nunito', sans-serif;
+                }
+                .toast.hidden { opacity: 0; transform: translateX(-50%) translateY(20px); pointer-events: none; }
+                .toast.success { background: #48bb78; }
+                .toast.error { background: #e53e3e; }
+            `;
+            document.head.appendChild(style);
+        }
+    }
+    
+    toast.textContent = message;
+    toast.className = `toast ${type}`;
+    
+    setTimeout(() => {
+        toast.classList.add('hidden');
+    }, 3000);
+}

@@ -13,11 +13,19 @@ func main() {
 	r.Static("/static", "./web/static")
 	r.LoadHTMLGlob("web/templates/*")
 
+	// Landing page for creating/joining rooms
 	r.GET("/", func(c *gin.Context) {
-		c.HTML(200, "lobby.html", nil)
+		c.HTML(200, "index.html", nil)
 	})
-	
-	r.GET("/game", func(c *gin.Context) {
+
+	// Game room page - handles both lobby and game states
+	r.GET("/:roomCode", func(c *gin.Context) {
+		roomCode := c.Param("roomCode")
+		// Don't match static files or special paths
+		if roomCode == "static" || roomCode == "ws" || roomCode == "favicon.ico" {
+			c.Status(404)
+			return
+		}
 		c.HTML(200, "game.html", nil)
 	})
 
