@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"scrawl/internal/hub"
 	"scrawl/internal/game"
+	"os"
 	"github.com/gorilla/websocket"
 )
 
@@ -62,5 +63,9 @@ func main() {
 
 	go hub.Run(hubInstance)
 
-	r.Run(":8080")
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "8080"
+	}
+	r.Run(":" + port)
 }
