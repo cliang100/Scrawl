@@ -36,3 +36,6 @@ Thumbs.db
 
 # Diffs
 *.diff
+
+# Netlify build output
+dist/
