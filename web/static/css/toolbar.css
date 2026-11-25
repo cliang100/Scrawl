@@ -10,6 +10,17 @@
     justify-content: center;
 }
 
+.toolbar button {
+    margin: 0;
+}
+
+@media (max-width: 1200px) {
+    .toolbar {
+        flex-wrap: wrap;
+        max-width: 100%;
+    }
+}
+
 /* Color Palette */
 .color-palette {
     display: flex;
@@ -23,6 +34,8 @@
 }
 
 .color-option {
+    margin: 0;
+    padding: 0;
     width: 28px;
     height: 28px;
     border-radius: 3px;
@@ -121,11 +134,6 @@
     border-color: #333;
     box-shadow: 0 0 0 2px #333, 0 4px 12px rgba(0, 0, 0, 0.15);
     background: #c4b5fd;
-}
-
-/* Push Trash to Right */
-.toolbar #clearCanvas {
-    margin-left: auto;
 }
 
 /* Brush Size Picker */

@@ -28,9 +28,9 @@
 }
 
 /* Guest styling - dimmed controls */
-#lobbyOverlay.is-guest .setting-control {
+#lobbyOverlay.is-guest .dropdown-value {
     opacity: 0.6;
-    pointer-events: none;
+    cursor: default;
 }
 
 #lobbyOverlay.is-guest #startGameBtn {
@@ -99,6 +99,9 @@
 }
 
 .dropdown-value {
+    margin: 0;
+    font-size: inherit;
+    cursor: pointer;
     background: #f7fafc;
     color: #4a5568;
     border: 1px solid #e1e5e9;
@@ -133,6 +136,11 @@
 }
 
 .dropdown-item {
+    display: block;
+    width: 100%;
+    margin: 0;
+    border-radius: 0;
+    background: none;
     padding: 10px 16px;
     color: #333;
     font-weight: 500;

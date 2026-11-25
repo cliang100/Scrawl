@@ -95,6 +95,7 @@ body {
 }
 
 .avatar-option {
+    padding: 0;
     aspect-ratio: 1;
     background: #f5f5f5;
     border-radius: 12px;
