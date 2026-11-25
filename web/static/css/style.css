@@ -3,7 +3,6 @@
 
 @import url('base.css');
 @import url('layout.css');
-/* lobby.css excluded - only needed for standalone lobby.html */
 @import url('toolbar.css');
 @import url('game.css');
 @import url('chat.css');
