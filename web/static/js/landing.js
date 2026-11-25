@@ -16,49 +16,22 @@ document.addEventListener('DOMContentLoaded', () => {
 // Check for invite link in URL
 function checkForInviteLink() {
     const urlParams = new URLSearchParams(window.location.search);
-    const roomCode = urlParams.get('room');
+    const roomCode = (urlParams.get('room') || '').toUpperCase();
     
-    if (roomCode) {
-        inviteRoomCode = roomCode.toUpperCase();
+    if (/^[A-Z0-9]{6}$/.test(roomCode)) {
+        inviteRoomCode = roomCode;
         showInviteUI(inviteRoomCode);
     }
 }
 
 // Show invite UI when coming from invite link
 function showInviteUI(roomCode) {
-    const roomActions = document.querySelector('.room-actions');
-    if (!roomActions) return;
-    
-    // Replace room actions with invite-specific UI
-    roomActions.innerHTML = `
-        <div class="invite-banner">
-            <p class="invite-text">You've been invited to join room:</p>
-            <div class="invite-code">${roomCode}</div>
-        </div>
-        <button class="btn btn-primary" id="playBtn">
-            <span class="btn-icon">🎮</span>
-            Play
-        </button>
-        <div class="divider">or</div>
-        <button class="btn btn-secondary" id="createPrivateBtn">
-            <span class="btn-icon">🔒</span>
-            Create Private Room
-        </button>
-    `;
-    
-    // Setup invite buttons
-    document.getElementById('playBtn').addEventListener('click', () => {
-        const name = document.getElementById('playerName').value.trim();
-        if (!validateName(name)) return;
-        
-        savePlayerData(name);
-        connectAndJoinRoom(name, roomCode);
-    });
-    
-    document.getElementById('createPrivateBtn').addEventListener('click', () => {
-        // Remove invite UI and show normal create/join
-        location.href = '/'; // Reload without room param
-    });
+    const banner = el('div', 'invite-banner');
+    banner.append(
+        el('p', 'invite-text', "You've been invited to join room:"),
+        el('div', 'invite-code', roomCode),
+    );
+    document.querySelector('.room-actions').prepend(banner);
 }
 
 // Avatar Selection
@@ -68,14 +41,10 @@ function setupAvatarSelection() {
     
     avatarOptions.forEach(option => {
         option.addEventListener('click', () => {
-            // Remove active class from all
             avatarOptions.forEach(opt => opt.classList.remove('active'));
-            // Add to clicked
             option.classList.add('active');
-            // Update selected
             selectedAvatar = option.dataset.avatar;
             selectedAvatarEl.textContent = selectedAvatar;
-            // Save preference
             localStorage.setItem('scrawl_avatar', selectedAvatar);
         });
     });
@@ -191,74 +160,35 @@ function loadSavedData() {
     }
 }
 
-// WebSocket Connection for Room Creation/Joining
-function connectAndCreateRoom(playerName) {
-    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-    ws = new WebSocket(`${protocol}//${window.location.host}/ws`);
-    
-    ws.onopen = () => {
-        ws.send(JSON.stringify({
-            type: 'createRoom',
-            data: {
-                name: playerName,
-                avatar: selectedAvatar
-            }
-        }));
-    };
-    
-    ws.onmessage = handleServerMessage;
-    ws.onerror = () => showToast('Connection failed', 'error');
+function connectAndCreateRoom(name) {
+    connect('createRoom', { name, avatar: selectedAvatar });
 }
 
-function connectAndJoinRoom(playerName, roomCode) {
-    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-    ws = new WebSocket(`${protocol}//${window.location.host}/ws/${roomCode}`);
-    
-    ws.onopen = () => {
-        ws.send(JSON.stringify({
-            type: 'joinRoom',
-            data: {
-                name: playerName,
-                avatar: selectedAvatar
-            }
-        }));
-    };
-    
+function connectAndJoinRoom(name, roomCode) {
+    connect('joinRoom', { name, avatar: selectedAvatar, roomCode, token: loadToken(roomCode) });
+}
+
+function connect(type, data) {
+    if (ws) ws.close();
+    ws = openSocket();
+    ws.onopen = () => sendMessage(ws, type, data);
     ws.onmessage = handleServerMessage;
     ws.onerror = () => showToast('Connection failed', 'error');
 }
 
 function handleServerMessage(event) {
-    const message = JSON.parse(event.data);
-    console.log('Server message:', message);
-    
-    switch (message.type) {
+    const { type, data } = JSON.parse(event.data);
+
+    switch (type) {
         case 'roomCreated':
-            localStorage.setItem('scrawl_room_code', message.data.roomCode);
-            localStorage.setItem('scrawl_is_host', 'true');
-            window.location.href = `/${message.data.roomCode}`;
-            break;
-            
         case 'roomJoined':
-            localStorage.setItem('scrawl_room_code', message.data.roomCode);
-            localStorage.setItem('scrawl_is_host', 'false');
-            window.location.href = `/${message.data.roomCode}`;
+            saveToken(data.roomCode, data.token);
+            window.location.href = `/${data.roomCode}`;
             break;
-            
+
         case 'roomError':
-            showToast(message.data.error, 'error');
-            if (ws) ws.close();
+            showToast(data.error, 'error');
+            ws.close();
             break;
     }
-}
-
-// Toast Notification
-function showToast(message, type = 'info') {
-    const toast = document.getElementById('toast');
-    toast.textContent = message;
-    toast.className = `toast ${type}`;
-    
-    setTimeout(() => {
-        toast.classList.add('hidden');
-    }, 3000);
 }

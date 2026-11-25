@@ -1,71 +1,48 @@
 package main
 
 import (
-	"github.com/gin-gonic/gin"
+	"context"
+	"errors"
+	"log"
 	"net/http"
-	"scrawl/internal/hub"
-	"scrawl/internal/game"
 	"os"
-	"github.com/gorilla/websocket"
+	"os/signal"
+	"strings"
+	"syscall"
+	"time"
+
+	"scrawl/internal/server"
 )
 
 func main() {
-	r := gin.Default()
-	r.Static("/static", "./web/static")
-	r.LoadHTMLGlob("web/templates/*")
-
-	// Landing page for creating/joining rooms
-	r.GET("/", func(c *gin.Context) {
-		c.HTML(200, "index.html", nil)
-	})
-
-	// Game room page - handles both lobby and game states
-	r.GET("/:roomCode", func(c *gin.Context) {
-		roomCode := c.Param("roomCode")
-		// Don't match static files or special paths
-		if roomCode == "static" || roomCode == "ws" || roomCode == "favicon.ico" {
-			c.Status(404)
-			return
-		}
-		c.HTML(200, "game.html", nil)
-	})
-
-	var upgrader = websocket.Upgrader{
-		CheckOrigin: func(r *http.Request) bool {
-			return true
-		},
-	}
-
-	var hubInstance = hub.NewHub()
-
-	roomManager := game.NewRoomManager()
-
-	r.GET("/ws", func(c *gin.Context) {
-		conn, err := upgrader.Upgrade(c.Writer, c.Request, nil)
-		if err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "WebSocket upgrade failed"})
-			return
-		}
-
-		hub.HandleClient(conn, hubInstance, "lobby", roomManager)
-	})
-
-	r.GET("/ws/:roomId", func(c *gin.Context) {
-		roomID := c.Param("roomId")
-		conn, err := upgrader.Upgrade(c.Writer, c.Request, nil)
-		if err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "WebSocket upgrade failed"})
-			return
-		}
-
-		hub.HandleClient(conn, hubInstance, roomID, roomManager)
-	})
-
-	go hub.Run(hubInstance)
-
 	port := os.Getenv("PORT")
 	if port == "" {
 		port = "8080"
 	}
-	r.Run(":" + port)
+	var origins []string
+	if v := os.Getenv("ALLOWED_ORIGINS"); v != "" {
+		for origin := range strings.SplitSeq(v, ",") {
+			origins = append(origins, strings.TrimRight(strings.TrimSpace(origin), "/"))
+		}
+	}
+
+	srv := &http.Server{
+		Addr:              ":" + port,
+		Handler:           server.New("web", origins),
+		ReadHeaderTimeout: 10 * time.Second,
+	}
+
+	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+	defer stop()
+	go func() {
+		<-ctx.Done()
+		shutdown, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+		srv.Shutdown(shutdown)
+	}()
+
+	log.Printf("listening on :%s", port)
+	if err := srv.ListenAndServe(); !errors.Is(err, http.ErrServerClosed) {
+		log.Fatal(err)
+	}
 }

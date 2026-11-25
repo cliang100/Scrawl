@@ -25,7 +25,6 @@
                     <span class="word-content"></span>
                 </div>
             </div>
-            <div class="settings-icon">⚙️</div>
         </div>
     </div>
 
@@ -50,13 +49,13 @@
                     <div class="setting-row">
                         <span class="setting-label">Rounds</span>
                         <div class="dropdown" id="roundsDropdown">
-                            <div class="dropdown-value" id="roundsValue">3</div>
+                            <button type="button" class="dropdown-value" id="roundsValue">3</button>
                             <div class="dropdown-menu hidden">
-                                <div class="dropdown-item" data-value="1">1</div>
-                                <div class="dropdown-item" data-value="2">2</div>
-                                <div class="dropdown-item" data-value="3">3</div>
-                                <div class="dropdown-item" data-value="4">4</div>
-                                <div class="dropdown-item" data-value="5">5</div>
+                                <button type="button" class="dropdown-item" data-value="1">1</button>
+                                <button type="button" class="dropdown-item" data-value="2">2</button>
+                                <button type="button" class="dropdown-item" data-value="3">3</button>
+                                <button type="button" class="dropdown-item" data-value="4">4</button>
+                                <button type="button" class="dropdown-item" data-value="5">5</button>
                             </div>
                         </div>
                     </div>
@@ -64,16 +63,16 @@
                     <div class="setting-row">
                         <span class="setting-label">Draw Time</span>
                         <div class="dropdown" id="drawTimeDropdown">
-                            <div class="dropdown-value" id="drawTimeValue">80s</div>
+                            <button type="button" class="dropdown-value" id="drawTimeValue">80s</button>
                             <div class="dropdown-menu hidden">
-                                <div class="dropdown-item" data-value="30">30s</div>
-                                <div class="dropdown-item" data-value="40">40s</div>
-                                <div class="dropdown-item" data-value="60">60s</div>
-                                <div class="dropdown-item" data-value="80">80s</div>
-                                <div class="dropdown-item" data-value="100">100s</div>
-                                <div class="dropdown-item" data-value="120">120s</div>
-                                <div class="dropdown-item" data-value="150">150s</div>
-                                <div class="dropdown-item" data-value="180">180s</div>
+                                <button type="button" class="dropdown-item" data-value="30">30s</button>
+                                <button type="button" class="dropdown-item" data-value="40">40s</button>
+                                <button type="button" class="dropdown-item" data-value="60">60s</button>
+                                <button type="button" class="dropdown-item" data-value="80">80s</button>
+                                <button type="button" class="dropdown-item" data-value="100">100s</button>
+                                <button type="button" class="dropdown-item" data-value="120">120s</button>
+                                <button type="button" class="dropdown-item" data-value="150">150s</button>
+                                <button type="button" class="dropdown-item" data-value="180">180s</button>
                             </div>
                         </div>
                     </div>
@@ -96,38 +95,38 @@
             <div class="toolbar">
                 <div class="color-palette">
                     <div class="color-row">
-                        <div class="color-option" data-color="#FFFFFF" style="background: #FFFFFF;"></div>
-                        <div class="color-option" data-color="#C1C1C1" style="background: #C1C1C1;"></div>
-                        <div class="color-option" data-color="#FF6B6B" style="background: #FF6B6B;"></div>
-                        <div class="color-option" data-color="#FF9F43" style="background: #FF9F43;"></div>
-                        <div class="color-option" data-color="#FFE66D" style="background: #FFE66D;"></div>
-                        <div class="color-option" data-color="#4ECDC4" style="background: #4ECDC4;"></div>
-                        <div class="color-option" data-color="#95E1D3" style="background: #95E1D3;"></div>
-                        <div class="color-option" data-color="#74B9FF" style="background: #74B9FF;"></div>
-                        <div class="color-option" data-color="#0984E3" style="background: #0984E3;"></div>
-                        <div class="color-option" data-color="#A29BFE" style="background: #A29BFE;"></div>
-                        <div class="color-option" data-color="#FD79A8" style="background: #FD79A8;"></div>
-                        <div class="color-option" data-color="#F5DEB3" style="background: #F5DEB3;"></div>
-                        <div class="color-option" data-color="#8B4513" style="background: #8B4513;"></div>
+                        <button type="button" class="color-option" data-color="#FFFFFF" style="background: #FFFFFF;" aria-label="Color #FFFFFF"></button>
+                        <button type="button" class="color-option" data-color="#C1C1C1" style="background: #C1C1C1;" aria-label="Color #C1C1C1"></button>
+                        <button type="button" class="color-option" data-color="#FF6B6B" style="background: #FF6B6B;" aria-label="Color #FF6B6B"></button>
+                        <button type="button" class="color-option" data-color="#FF9F43" style="background: #FF9F43;" aria-label="Color #FF9F43"></button>
+                        <button type="button" class="color-option" data-color="#FFE66D" style="background: #FFE66D;" aria-label="Color #FFE66D"></button>
+                        <button type="button" class="color-option" data-color="#4ECDC4" style="background: #4ECDC4;" aria-label="Color #4ECDC4"></button>
+                        <button type="button" class="color-option" data-color="#95E1D3" style="background: #95E1D3;" aria-label="Color #95E1D3"></button>
+                        <button type="button" class="color-option" data-color="#74B9FF" style="background: #74B9FF;" aria-label="Color #74B9FF"></button>
+                        <button type="button" class="color-option" data-color="#0984E3" style="background: #0984E3;" aria-label="Color #0984E3"></button>
+                        <button type="button" class="color-option" data-color="#A29BFE" style="background: #A29BFE;" aria-label="Color #A29BFE"></button>
+                        <button type="button" class="color-option" data-color="#FD79A8" style="background: #FD79A8;" aria-label="Color #FD79A8"></button>
+                        <button type="button" class="color-option" data-color="#F5DEB3" style="background: #F5DEB3;" aria-label="Color #F5DEB3"></button>
+                        <button type="button" class="color-option" data-color="#8B4513" style="background: #8B4513;" aria-label="Color #8B4513"></button>
                     </div>
                     <div class="color-row">
-                        <div class="color-option" data-color="#000000" style="background: #000000;"></div>
-                        <div class="color-option" data-color="#636E72" style="background: #636E72;"></div>
-                        <div class="color-option" data-color="#C0392B" style="background: #C0392B;"></div>
-                        <div class="color-option" data-color="#E67E22" style="background: #E67E22;"></div>
-                        <div class="color-option" data-color="#F1C40F" style="background: #F1C40F;"></div>
-                        <div class="color-option" data-color="#27AE60" style="background: #27AE60;"></div>
-                        <div class="color-option" data-color="#16A085" style="background: #16A085;"></div>
-                        <div class="color-option" data-color="#2980B9" style="background: #2980B9;"></div>
-                        <div class="color-option" data-color="#2C3E50" style="background: #2C3E50;"></div>
-                        <div class="color-option" data-color="#8E44AD" style="background: #8E44AD;"></div>
-                        <div class="color-option" data-color="#C2185B" style="background: #C2185B;"></div>
-                        <div class="color-option" data-color="#8D6E63" style="background: #8D6E63;"></div>
-                        <div class="color-option" data-color="#4A2C2A" style="background: #4A2C2A;"></div>
+                        <button type="button" class="color-option" data-color="#000000" style="background: #000000;" aria-label="Color #000000"></button>
+                        <button type="button" class="color-option" data-color="#636E72" style="background: #636E72;" aria-label="Color #636E72"></button>
+                        <button type="button" class="color-option" data-color="#C0392B" style="background: #C0392B;" aria-label="Color #C0392B"></button>
+                        <button type="button" class="color-option" data-color="#E67E22" style="background: #E67E22;" aria-label="Color #E67E22"></button>
+                        <button type="button" class="color-option" data-color="#F1C40F" style="background: #F1C40F;" aria-label="Color #F1C40F"></button>
+                        <button type="button" class="color-option" data-color="#27AE60" style="background: #27AE60;" aria-label="Color #27AE60"></button>
+                        <button type="button" class="color-option" data-color="#16A085" style="background: #16A085;" aria-label="Color #16A085"></button>
+                        <button type="button" class="color-option" data-color="#2980B9" style="background: #2980B9;" aria-label="Color #2980B9"></button>
+                        <button type="button" class="color-option" data-color="#2C3E50" style="background: #2C3E50;" aria-label="Color #2C3E50"></button>
+                        <button type="button" class="color-option" data-color="#8E44AD" style="background: #8E44AD;" aria-label="Color #8E44AD"></button>
+                        <button type="button" class="color-option" data-color="#C2185B" style="background: #C2185B;" aria-label="Color #C2185B"></button>
+                        <button type="button" class="color-option" data-color="#8D6E63" style="background: #8D6E63;" aria-label="Color #8D6E63"></button>
+                        <button type="button" class="color-option" data-color="#4A2C2A" style="background: #4A2C2A;" aria-label="Color #4A2C2A"></button>
                     </div>
                 </div>
                 <div class="brush-picker">
-                    <button class="brush-trigger" id="brushTrigger" title="Brush Size">
+                    <button type="button" class="brush-trigger" id="brushTrigger" title="Brush Size" aria-label="Brush size">
                         <span class="brush-icon"></span>
                     </button>
                     <div class="brush-options drop-up">
@@ -166,16 +165,19 @@
         <!-- Right: Chat -->
         <div class="right-sidebar">
             <div class="chat-container">
-                <div class="message-list" id="messageList">
+                <div class="message-list" id="messageList" role="log">
                     <!-- Messages go here -->
                 </div>
                 <div class="chat-input">
-                    <input type="text" id="guessInput" placeholder="Type your guess here...">
+                    <input type="text" id="guessInput" aria-label="Guess" maxlength="100" autocomplete="off" placeholder="Type your guess here...">
                 </div>
             </div>
         </div>
     </div>
 
+    <div id="toast" class="toast hidden" role="status"></div>
+
+    <script src="/static/js/config.js"></script>
     <script src="/static/js/socket.js"></script>
     <script src="/static/js/canvas.js"></script>
     <script src="/static/js/game.js"></script>

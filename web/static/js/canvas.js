@@ -1,413 +1,215 @@
+// Every client uses the same 800x600 coordinates; CSS scales the element.
+const CANVAS_WIDTH = 800;
+const CANVAS_HEIGHT = 600;
+const FLUSH_MS = 50;
+const MAX_BATCH = 20;
+const FILL_TOLERANCE = 32;
+
 class DrawingCanvas {
-    constructor(canvasId) {
-        this.canvas = document.getElementById(canvasId);
-        this.ctx = this.canvas.getContext('2d', { willReadFrequently: true });
-        this.isDrawing = false;
-        this.setColor('#000000');
-        this.setSize(5);
-        this.setupCanvas();
-        this.setupEventListeners();
-        this.strokes = [];
-        this.currentStroke = null;
-        this.strokeBuffer = [];
-        this.flushInterval = null;
-    }
-
-    bufferPoint(x, y) {
-        this.strokeBuffer.push({x, y});
-
-        clearTimeout(this.flushInterval);
-        this.flushInterval = setTimeout(() => this.flushStroke(), 50);
-
-        if (this.strokeBuffer.length >= 20) {
-            this.flushStroke();
-        }
-    }
-
-    flushStroke() {
-        if (this.strokeBuffer.length === 0) return;
-
-        if (ws && ws.readyState === WebSocket.OPEN) {
-            ws.send(JSON.stringify({
-                type: 'stroke',
-                data: {
-                    strokeId: this.currentStrokeId,
-                    points: [...this.strokeBuffer],
-                    color: this.currentColor,
-                    size: this.currentSize
-                }
-            }));
-        }
-
-        this.strokeBuffer = [];
-    }
-    
-    setupCanvas() {
-        setTimeout(() => {
-            const rect = this.canvas.getBoundingClientRect();
-            this.canvas.width = rect.width;
-            this.canvas.height = rect.height;
-            this.clearCanvas();
-        }, 100);
-        
-        
-        // Set default styles
+    constructor(canvas, canDraw, send) {
+        this.canvas = canvas;
+        this.canDraw = canDraw;
+        this.send = send;
+        canvas.width = CANVAS_WIDTH;
+        canvas.height = CANVAS_HEIGHT;
+        this.ctx = canvas.getContext('2d', { willReadFrequently: true });
         this.ctx.lineCap = 'round';
         this.ctx.lineJoin = 'round';
-    }
-    
-    setupEventListeners() {
-        // Mouse events
-        this.canvas.addEventListener('mousedown', (e) => this.startDrawing(e));
-        this.canvas.addEventListener('mousemove', (e) => this.draw(e));
-        this.canvas.addEventListener('mouseup', () => this.stopDrawing());
-        // Track if we should continue drawing when re-entering canvas
-        this.isMouseDown = false;
-        this.shouldResumeDrawing = false;
-        
-        // Track mouse button state on document level
-        document.addEventListener('mouseup', () => {
-            this.isMouseDown = false;
-            this.shouldResumeDrawing = false;
-            this.stopDrawing();
-        });
-        document.addEventListener('mousedown', () => {
-            this.isMouseDown = true;
-        });
-        
-        this.canvas.addEventListener('mouseout', () => {
-            if (this.isDrawing) {
-                this.shouldResumeDrawing = true;
-                this.isDrawing = false;
-            }
-        });
-        
-        this.canvas.addEventListener('mouseenter', (e) => {
-            if (this.shouldResumeDrawing && this.isMouseDown) {
-                this.startDrawing(e);
-            }
-        });
-        
-        // Touch events for mobile
-        this.canvas.addEventListener('touchstart', (e) => this.handleTouch(e, 'start'));
-        this.canvas.addEventListener('touchmove', (e) => this.handleTouch(e, 'move'));
-        this.canvas.addEventListener('touchend', () => this.stopDrawing());
+
+        this.color = '#000000';
+        this.size = 5;
+        this.tool = 'pen';
+        this.strokeId = null;
+        this.pending = [];
+        this.flushTimer = null;
+        this.load([]);
+
+        canvas.addEventListener('pointerdown', e => this.start(e));
+        canvas.addEventListener('pointermove', e => this.move(e));
+        canvas.addEventListener('pointerup', () => this.stop());
+        canvas.addEventListener('pointercancel', () => this.stop());
     }
 
-    handleTouch(e, type) {
-    e.preventDefault();
-    const touch = e.touches[0];
-    const mouseEvent = new MouseEvent(type === 'start' ? 'mousedown' : 'mousemove', {
-        clientX: touch.clientX,
-        clientY: touch.clientY
-    });
-    this.canvas.dispatchEvent(mouseEvent);
-    }
-    
-    startDrawing(e) {
-        if (currentDrawerId !== currentUserId || !currentWord) {
-            return;
-        }
-
+    position(e) {
         const rect = this.canvas.getBoundingClientRect();
-        const x = e.clientX - rect.left;
-        const y = e.clientY - rect.top;
+        const x = ((e.clientX - rect.left) / rect.width) * CANVAS_WIDTH;
+        const y = ((e.clientY - rect.top) / rect.height) * CANVAS_HEIGHT;
+        return {
+            x: Math.round(Math.min(Math.max(x, 0), CANVAS_WIDTH) * 10) / 10,
+            y: Math.round(Math.min(Math.max(y, 0), CANVAS_HEIGHT) * 10) / 10,
+        };
+    }
 
-        if (this.currentTool === 'fill') {
-            this.floodFill(x, y, this.currentColor);
-            sendFill(x, y, this.currentColor);
+    start(e) {
+        if (!this.canDraw() || e.button !== 0) return;
+        const point = this.position(e);
+        if (this.tool === 'fill') {
+            const op = { points: [point], color: this.color };
+            this.apply({ ...op, type: 'fill' });
+            this.send('fill', op);
             return;
         }
-
-        this.strokes.push({
-            points: [],
-            color: this.currentColor,
-            size: this.currentSize
-        });
-        this.currentStrokeId = crypto.randomUUID();
-        this.isDrawing = true;
-
-        this.ctx.beginPath();
-        this.ctx.moveTo(x, y);
-
-        this.strokes[this.strokes.length - 1].points.push({x, y});
-
-        this.bufferPoint(x, y);
-    }
-    
-    draw(e) {
-        if (!this.isDrawing) return;
-        
-        const rect = this.canvas.getBoundingClientRect();
-        const x = e.clientX - rect.left;
-        const y = e.clientY - rect.top;
-        
-        this.ctx.strokeStyle = this.currentColor;
-        this.ctx.lineWidth = this.currentSize;
-        this.ctx.lineCap = 'round';
-        this.ctx.lineJoin = 'round';
-        this.ctx.lineTo(x, y);
-        this.ctx.stroke();
-        
-        this.strokes[this.strokes.length - 1].points.push({x, y});
-
-        this.bufferPoint(x, y);
-    }
-    
-    stopDrawing() {
-        if (this.isDrawing) {
-            this.isDrawing = false;
-            this.flushStroke();
-        }
-    }
-    
-    sendDrawEvent(type, x, y) {
-        if (ws && ws.readyState === WebSocket.OPEN) {
-            ws.send(JSON.stringify({
-                type: 'draw',
-                data: {
-                    action: type,
-                    x: x,
-                    y: y,
-                    color: this.currentColor,
-                    size: this.currentSize
-                }
-            }));
-        }
-    }
-    
-    clearCanvas() {
-        this.ctx.fillStyle = '#ffffff';
-        this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
-        this.strokes = [];  // Clear stroke history
-    }
-    
-    setColor(color) {
-        this.currentColor = color;
-    }
-    
-    setSize(size) {
-        this.currentSize = size;
+        this.canvas.setPointerCapture(e.pointerId);
+        this.strokeId = `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+        this.addPoint(point);
     }
 
-    setTool(tool) {
-        this.currentTool = tool;
-    }
-
-replayStrokes() {
-    this.strokes.forEach(stroke => {
-        if (stroke.type === 'fill' || !stroke.points) return;
-
-        this.ctx.strokeStyle = stroke.color;
-        this.ctx.lineWidth = stroke.size;
-        this.ctx.lineCap = 'round';
-        this.ctx.lineJoin = 'round';
-        this.ctx.beginPath();
-        stroke.points.forEach((point, index) => {
-            if (index === 0) {
-                this.ctx.moveTo(point.x, point.y);
-            } else {
-                this.ctx.lineTo(point.x, point.y);
-            }
-        });
-        this.ctx.stroke();
-    });
-}
-
-    undoLastStroke(skipBroadcast = false) {
-        if (this.strokes.length === 0) return;
-        this.strokes.pop();
-        // Manually clear canvas without wiping strokes array
-        this.ctx.fillStyle = '#ffffff';
-        this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
-        this.replayStrokes();
-
-        if (!skipBroadcast && ws && ws.readyState === WebSocket.OPEN) {
-            ws.send(JSON.stringify({ type: 'undoStroke', data: {} }));
-        }
-    }
-
-    floodFill(startX, startY, fillColor) {
-        const imageData = this.ctx.getImageData(0, 0, this.canvas.width, this.canvas.height);
-        const data = imageData.data;
-        const width = this.canvas.width;
-        const height = this.canvas.height;
-
-        const startIdx = (Math.floor(startY) * width + Math.floor(startX)) * 4;
-        const targetR = data[startIdx];
-        const targetG = data[startIdx + 1];
-        const targetB = data[startIdx + 2];
-        const targetA = data[startIdx + 3];
-
-        const fillRgb = this.hexToRgb(fillColor);
-        if (!fillRgb) return;
-
-        if (targetR === fillRgb.r && targetG === fillRgb.g &&
-            targetB === fillRgb.b && targetA === 255) {
+    move(e) {
+        if (this.strokeId === null) return;
+        if (!this.canDraw()) {
+            this.stop();
             return;
         }
+        this.addPoint(this.position(e));
+    }
 
-        const stack = [[Math.floor(startX), Math.floor(startY)]];
-        const tolerance = 32;
+    stop() {
+        this.flush();
+        this.strokeId = null;
+    }
 
+    addPoint(point) {
+        this.apply({ type: 'stroke', strokeId: this.strokeId, points: [point], color: this.color, size: this.size });
+        this.pending.push(point);
+        if (this.pending.length >= MAX_BATCH) {
+            this.flush();
+        } else if (this.flushTimer === null) {
+            this.flushTimer = setTimeout(() => this.flush(), FLUSH_MS);
+        }
+    }
+
+    flush() {
+        clearTimeout(this.flushTimer);
+        this.flushTimer = null;
+        if (this.pending.length === 0) return;
+        this.send('stroke', { strokeId: this.strokeId, points: this.pending, color: this.color, size: this.size });
+        this.pending = [];
+    }
+
+    // load replaces the drawing with a list of operations.
+    load(ops) {
+        clearTimeout(this.flushTimer);
+        this.flushTimer = null;
+        this.pending = [];
+        this.strokeId = null;
+        this.ops = [];
+        this.wipe();
+        for (const op of ops) this.apply(op);
+    }
+
+    // apply draws one operation and remembers it for undo.
+    apply(op) {
+        const last = this.ops.at(-1);
+        if (op.type === 'stroke' && last?.type === 'stroke' && last.strokeId === op.strokeId) {
+            this.drawLine([last.points.at(-1), ...op.points], op);
+            last.points.push(...op.points);
+            return;
+        }
+        this.ops.push({ ...op, points: [...op.points] });
+        this.draw(op);
+    }
+
+    draw(op) {
+        if (op.type === 'fill') this.floodFill(op.points[0], op.color);
+        else this.drawLine(op.points, op);
+    }
+
+    drawLine(points, { color, size }) {
+        this.ctx.strokeStyle = color;
+        this.ctx.lineWidth = size;
+        this.ctx.beginPath();
+        this.ctx.moveTo(points[0].x, points[0].y);
+        for (const p of points) this.ctx.lineTo(p.x, p.y);
+        this.ctx.stroke();
+    }
+
+    undo() {
+        this.ops.pop();
+        this.wipe();
+        for (const op of this.ops) this.draw(op);
+    }
+
+    wipe() {
+        this.ctx.fillStyle = '#ffffff';
+        this.ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+    }
+
+    floodFill(start, color) {
+        const image = this.ctx.getImageData(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+        const pixels = image.data;
+        const startX = Math.min(Math.floor(start.x), CANVAS_WIDTH - 1);
+        const startY = Math.min(Math.floor(start.y), CANVAS_HEIGHT - 1);
+        const first = startY * CANVAS_WIDTH + startX;
+        const target = pixels.slice(first * 4, first * 4 + 3);
+        const fill = [1, 3, 5].map(i => parseInt(color.slice(i, i + 2), 16));
+
+        // seen matters when the fill colour is within tolerance of the target
+        const seen = new Uint8Array(CANVAS_WIDTH * CANVAS_HEIGHT);
+        const stack = [first];
         while (stack.length > 0) {
-            const [x, y] = stack.pop();
+            const i = stack.pop();
+            if (seen[i]) continue;
+            seen[i] = 1;
+            const p = i * 4;
+            if (target.some((value, c) => Math.abs(pixels[p + c] - value) > FILL_TOLERANCE)) continue;
+            pixels[p] = fill[0];
+            pixels[p + 1] = fill[1];
+            pixels[p + 2] = fill[2];
 
-            if (x < 0 || x >= width || y < 0 || y >= height) continue;
-
-            const idx = (y * width + x) * 4;
-            const r = data[idx], g = data[idx + 1],
-                  b = data[idx + 2], a = data[idx + 3];
-
-            if (Math.abs(r - targetR) > tolerance ||
-                Math.abs(g - targetG) > tolerance ||
-                Math.abs(b - targetB) > tolerance ||
-                Math.abs(a - targetA) > tolerance) {
-                continue;
-            }
-
-            if (r === fillRgb.r && g === fillRgb.g &&
-                b === fillRgb.b && a === 255) {
-                continue;
-            }
-
-            data[idx] = fillRgb.r;
-            data[idx + 1] = fillRgb.g;
-            data[idx + 2] = fillRgb.b;
-            data[idx + 3] = 255;
-
-            stack.push([x + 1, y], [x - 1, y], [x, y + 1], [x, y - 1]);
+            const x = i % CANVAS_WIDTH;
+            if (x > 0) stack.push(i - 1);
+            if (x < CANVAS_WIDTH - 1) stack.push(i + 1);
+            if (i >= CANVAS_WIDTH) stack.push(i - CANVAS_WIDTH);
+            if (i < CANVAS_WIDTH * (CANVAS_HEIGHT - 1)) stack.push(i + CANVAS_WIDTH);
         }
-
-        this.ctx.putImageData(imageData, 0, 0);
-        
-        // Redraw strokes to cover anti-aliased edges
-        this.replayStrokes();
-
-        this.strokes.push({
-            type: 'fill',
-            x: startX,
-            y: startY,
-            color: fillColor
-        });
-    }
-
-    hexToRgb(hex) {
-        const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
-        return result ? {
-            r: parseInt(result[1], 16),
-            g: parseInt(result[2], 16),
-            b: parseInt(result[3], 16)
-        } : null;
+        this.ctx.putImageData(image, 0, 0);
     }
 }
 
-// Initialize canvas when page loads
-let drawingCanvas;
-window.addEventListener('load', () => {
-    drawingCanvas = new DrawingCanvas('drawingCanvas');
-    
-    // Color palette selection
-    const colorOptions = document.querySelectorAll('.color-option');
-    colorOptions.forEach(option => {
+function setupToolbar(drawing) {
+    const select = (selector, chosen) => {
+        for (const node of document.querySelectorAll(selector)) {
+            node.classList.toggle('selected', node === chosen);
+        }
+    };
+
+    for (const option of document.querySelectorAll('.color-option')) {
         option.addEventListener('click', () => {
-            const color = option.dataset.color;
-            drawingCanvas.setColor(color);
-
-            colorOptions.forEach(opt => opt.classList.remove('selected'));
-            option.classList.add('selected');
+            drawing.color = option.dataset.color;
+            select('.color-option', option);
         });
-    });
-
-    // Set initial color to black
-    const initialColor = document.querySelector('.color-option[data-color="#000000"]');
-    if (initialColor) {
-        initialColor.classList.add('selected');
-        drawingCanvas.setColor('#000000');
     }
-    
-    // Brush picker dropdown logic
-    const brushTrigger = document.getElementById('brushTrigger');
+    select('.color-option', document.querySelector('.color-option[data-color="#000000"]'));
+
     const brushOptions = document.querySelector('.brush-options');
-    const brushOptionElements = document.querySelectorAll('.brush-option');
-
-    // Set initial size to Medium-Thin (5)
-    drawingCanvas.setSize(5);
-
-    // Toggle dropdown
-    brushTrigger.addEventListener('click', (e) => {
+    document.getElementById('brushTrigger').addEventListener('click', e => {
         e.stopPropagation();
         brushOptions.classList.toggle('open');
     });
-
-    // Handle option selection
-    brushOptionElements.forEach(option => {
-        option.addEventListener('click', (e) => {
-            e.stopPropagation();
-            const size = parseInt(option.dataset.size);
-            drawingCanvas.setSize(size);
-
-            // Update selection state
-            brushOptionElements.forEach(opt => opt.classList.remove('selected'));
-            option.classList.add('selected');
-
-            // Update brush icon size to match selection
-            const brushIcon = document.querySelector('.brush-icon');
-            if (brushIcon) {
-                const displaySize = Math.max(8, size * 1.5);
-                brushIcon.style.width = displaySize + 'px';
-                brushIcon.style.height = displaySize + 'px';
-            }
-
-            // CLose dropdown
-            brushOptions.classList.remove('open');
+    document.addEventListener('click', () => brushOptions.classList.remove('open'));
+    for (const option of document.querySelectorAll('.brush-option')) {
+        option.addEventListener('click', () => {
+            drawing.size = Number(option.dataset.size);
+            select('.brush-option', option);
+            const icon = document.querySelector('.brush-icon');
+            icon.style.width = icon.style.height = `${Math.max(8, drawing.size * 1.5)}px`;
         });
-    });
+    }
 
-    // Clear canvas button
+    for (const tool of ['pen', 'fill']) {
+        const button = document.getElementById(`${tool}Tool`);
+        button.addEventListener('click', () => {
+            drawing.tool = tool;
+            select('.tool-btn', button);
+        });
+    }
+
     document.getElementById('clearCanvas').addEventListener('click', () => {
-        drawingCanvas.clearCanvas();
-        if (ws && ws.readyState === WebSocket.OPEN) {
-            ws.send(JSON.stringify({ type: 'clearCanvas', data: {} }));
-        }
+        drawing.load([]);
+        drawing.send('clearCanvas', {});
     });
-
-    // Undo last stroke button
     document.getElementById('undoStroke').addEventListener('click', () => {
-        drawingCanvas.undoLastStroke();
+        drawing.undo();
+        drawing.send('undoStroke', {});
     });
-
-    // Fill tool button
-    const fillToolBtn = document.getElementById('fillTool');
-    if (fillToolBtn) {
-        fillToolBtn.addEventListener('click', () => {
-            drawingCanvas.setTool('fill');
-            document.querySelectorAll('.tool-btn').forEach(btn => btn.classList.remove('selected'));
-            fillToolBtn.classList.add('selected');
-        });
-    }
-
-    // Pen tool (default)
-    const penToolBtn = document.getElementById('penTool') || document.querySelector('.pen-tool');
-    if (penToolBtn) {
-        penToolBtn.addEventListener('click', () => {
-            drawingCanvas.setTool('pen');
-            document.querySelectorAll('.tool-btn').forEach(btn => btn.classList.remove('selected'));
-            penToolBtn.classList.add('selected');
-        });
-    }
-    
-    // Close dropdown when clicking outside
-    document.addEventListener('click', () => {
-        brushOptions.classList.remove('open');
-    });
-});
-
-window.addEventListener('resize', () => {
-    if (drawingCanvas) {
-        const rect = drawingCanvas.canvas.getBoundingClientRect();
-        drawingCanvas.canvas.width = rect.width;
-        drawingCanvas.canvas.height = rect.height;
-        drawingCanvas.clearCanvas();
-    }
-});
+}

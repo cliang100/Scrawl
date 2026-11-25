@@ -23,23 +23,23 @@
                 <div class="selected-avatar" id="selectedAvatar">🎨</div>
                 <p class="avatar-label">Choose your avatar</p>
                 <div class="avatar-grid">
-                    <div class="avatar-option active" data-avatar="🎨">🎨</div>
-                    <div class="avatar-option" data-avatar="🦊">🦊</div>
-                    <div class="avatar-option" data-avatar="🐱">🐱</div>
-                    <div class="avatar-option" data-avatar="🐶">🐶</div>
-                    <div class="avatar-option" data-avatar="🦄">🦄</div>
-                    <div class="avatar-option" data-avatar="🐼">🐼</div>
-                    <div class="avatar-option" data-avatar="🦋">🦋</div>
-                    <div class="avatar-option" data-avatar="🐸">🐸</div>
-                    <div class="avatar-option" data-avatar="🦁">🦁</div>
-                    <div class="avatar-option" data-avatar="🐰">🐰</div>
-                    <div class="avatar-option" data-avatar="🦉">🦉</div>
-                    <div class="avatar-option" data-avatar="🐙">🐙</div>
+                    <button type="button" class="avatar-option active" data-avatar="🎨" aria-label="Avatar 🎨">🎨</button>
+                    <button type="button" class="avatar-option" data-avatar="🦊" aria-label="Avatar 🦊">🦊</button>
+                    <button type="button" class="avatar-option" data-avatar="🐱" aria-label="Avatar 🐱">🐱</button>
+                    <button type="button" class="avatar-option" data-avatar="🐶" aria-label="Avatar 🐶">🐶</button>
+                    <button type="button" class="avatar-option" data-avatar="🦄" aria-label="Avatar 🦄">🦄</button>
+                    <button type="button" class="avatar-option" data-avatar="🐼" aria-label="Avatar 🐼">🐼</button>
+                    <button type="button" class="avatar-option" data-avatar="🦋" aria-label="Avatar 🦋">🦋</button>
+                    <button type="button" class="avatar-option" data-avatar="🐸" aria-label="Avatar 🐸">🐸</button>
+                    <button type="button" class="avatar-option" data-avatar="🦁" aria-label="Avatar 🦁">🦁</button>
+                    <button type="button" class="avatar-option" data-avatar="🐰" aria-label="Avatar 🐰">🐰</button>
+                    <button type="button" class="avatar-option" data-avatar="🦉" aria-label="Avatar 🦉">🦉</button>
+                    <button type="button" class="avatar-option" data-avatar="🐙" aria-label="Avatar 🐙">🐙</button>
                 </div>
             </div>
 
             <div class="name-section">
-                <input type="text" id="playerName" placeholder="Enter your name" maxlength="12" autocomplete="off">
+                <input type="text" id="playerName" aria-label="Your name" placeholder="Enter your name" maxlength="12" autocomplete="off">
             </div>
         </div>
 
@@ -57,7 +57,7 @@
             
             <!-- Hidden join UI (shown when Play clicked without invite) -->
             <div id="joinUI" class="join-ui hidden">
-                <input type="text" id="roomCode" placeholder="Room code (6 chars)" maxlength="6" autocomplete="off">
+                <input type="text" id="roomCode" aria-label="Room code" placeholder="Room code (6 chars)" maxlength="6" autocomplete="off">
                 <button class="btn btn-join" id="joinRoomBtn">
                     <span class="btn-icon">🚪</span>
                     Join
@@ -87,8 +87,10 @@
     </div>
 
     <!-- Notification Toast -->
-    <div id="toast" class="toast hidden"></div>
+    <div id="toast" class="toast hidden" role="status"></div>
 
+    <script src="/static/js/config.js"></script>
+    <script src="/static/js/socket.js"></script>
     <script src="/static/js/landing.js"></script>
 </body>
 </html>
